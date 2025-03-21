@@ -1,0 +1,14 @@
+{
+  "name": "Samih&#39;s Resume",
+  "short_name": "SQ",
+  "icons": [
+    {
+      "src": "/assets/images/favicons/burger.png",
+      "sizes": "1024x1006",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#fffbeb",
+  "background_color": "#B83A4B",
+  "display": "standalone"
+}
