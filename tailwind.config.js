@@ -1,34 +1,24 @@
 /** @type {import('tailwindcss').Config} */
-export default {
-  content: [
-    "./src/**/*.html",
-    "./src/**/*.njk",
-    "./src/**/*.md",
-    "./src/**/*.js",
-  ],
+module.exports = {
+  content: ["./src/**/*.{njk,md}", "./src/**/*.svg"],
   theme: {
     extend: {
-      typography: (theme) => ({
-        slate: {
-          css: {
-            "--tw-prose-headings": theme("colors.slate.800"),
-            "--tw-prose-lead": theme("colors.slate.800"),
-            "--tw-prose-bold": theme("colors.slate.800"),
-            "--tw-prose-links": theme("colors.slate.800"),
-            a: {
-              fontWeight: "normal",
-              textDecoration: "underline",
-              textDecorationThickness: "1px",
-              textUnderlineOffset: "4px",
-              textDecorationColor: theme("colors.slate.800"),
-              "&:hover": {
-                textDecorationColor: theme("colors.slate.400"),
-              },
-            },
-          },
+      colors: {
+        husky: {
+          50: "#fffbeb",
+          100: "#fef3c7",
+          200: "#fde58a",
+          300: "#fbd24e",
+          400: "#fabe25",
+          500: "#f49d0c",
+          600: "#d87607",
+          700: "#bc560a",
+          800: "#923f0e",
+          900: "#78340f",
+          950: "#451a03",
         },
-      }),
+      },
     },
   },
-  plugins: [require("@tailwindcss/typography")],
+  plugins: [],
 };

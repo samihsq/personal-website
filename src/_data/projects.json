@@ -1,0 +1,17 @@
+[
+  {
+    "industry": "StanfordPulse",
+    "details": "Developing a cutting-edge web application that provides real-time visualization of building occupancy across Stanford's campus. Creating an engaging and interactive platform that allows users to dynamically explore and understand campus activity patterns. \n\nThis application leverages React for the frontend, Django for the backend, and D3.js for data visualization, all hosted on AWS infrastructure (S3, EC2, RDS). The backend integrates existing APIs to fetch and process live occupancy data, utilizing PostgreSQL for efficient data storage and retrieval. Real-time updates are achieved using the Node.js library ws, enabling dynamic, interactive visualizations that refresh in real-time for enhanced user engagement.",
+    "role": ["Founder :D"],
+    "status": "in development",
+    "technologies": ["JavaScript (React)", "Python (Django)", "SQL", "AWS", "REST API"]
+  },
+  {
+    "industry": "Abandoned Bike Detection System",
+    "details": "As part of a team, I contributed to the development of an autonomous robot that detects and maps abandoned bicycles across Stanford’s campus, enhancing maintenance efficiency and providing insights into campus mobility. This project combined real-time detection with geospatial tracking, helping prioritize cleanup efforts and analyze bicycle usage patterns. \n \n Our team implemented an OpenCV object detection model with a 100% accuracy (so far!) in bicycle identification, leveraging deep learning techniques optimized for the Raspberry Pi platform. The detected data was stored in a PostgreSQL database with PostGIS extensions, facilitating efficient spatiotemporal analysis, trend visualization, and hotspot mapping. By integrating GPS coordinates with spatial indexing, we enabled precise geolocation and movement pattern analysis, supporting data-driven decision-making for campus maintenance teams.",
+    "role": ["Software Lead"],
+    "status": "in development",
+    "technologies": ["Python (OpenCV)", "Raspberry Pi", "SQL"],
+    "link": "https://cdn.discordapp.com/attachments/1296988226350874776/1346645290605609023/image.png?ex=67de08a8&is=67dcb728&hm=32693f6e66773e8dfde1874740ced1e489b77e27dd5526758c97dffffe53cfb0&"
+  }
+]
