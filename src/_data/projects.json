@@ -1,23 +1,24 @@
 [
   {
     "name": "StanfordPulse",
-    "details": "Engineered a full-stack application using React with Material-UI and FastAPI, integrating BestTime.app API to deliver real-time building occupancy data. Designed a responsive frontend featuring confidence indicators for data accuracy and state management via React Hooks.",
+    "details": "Creating a full-stack application to provide real-time building occupancy data about Stanford facilites!",
     "role": ["Founder :D"],
     "technologies": ["JavaScript (React, Material-UI)", "Python (FastAPI)", "BestTime.app API"],
-    "status": "in development"
+    "status": "in development",
+    "link": "https://github.com/samihsq/stanford_pulse"
   },
   {
     "name": "Abandoned Bicycle Detection System",
-    "details": "Developing an autonomous robot using Raspberry Pi and computer vision to detect and geolocate abandoned bicycles across Stanford's campus. Implemented OpenCV object detection model with ~97% accuracy in bicycle identification. Designing a PostgreSQL database for efficient storage and spatiotemporal analysis of detected bicycle data, enabling trend visualization and hotspot mapping.",
+    "details": "As part of a team, I contributed to the development of an autonomous robot that detects and maps abandoned bicycles across Stanford’s campus, enhancing maintenance efficiency and providing insights into campus mobility. This project combined real-time detection with geospatial tracking, helping prioritize cleanup efforts and analyze bicycle usage patterns. \n \n Our team implemented an OpenCV object detection model with a 100% accuracy (so far!) in bicycle identification! Once the project is done, we plan on providing its insights to campus authorities for bike cleanups!",
     "role": ["Software Lead"],
     "technologies": ["Python (OpenCV, TensorFlow)", "Raspberry Pi", "SQL"],
-    "status": "in development",
-    "link": "https://cdn.discordapp.com/attachments/1296988226350874776/1346645290605609023/image.png?ex=67de08a8&is=67dcb728&hm=32693f6e66773e8dfde1874740ced1e489b77e27dd5526758c97dffffe53cfb0&"
+    "status": "in development"
   },
   {
     "name": "Open & Trap Network System",
-    "details": "Patented livestock management system (US 63/415,411) using Raspberry Pi/Python for automated door control and RFID tracking. Engineered RESTful API handling 10+ devices simultaneously, with 99% uptime over solar-powered LoRa network. Implemented low-power mesh networking in C++ for trap monitoring, reducing power consumption by 60%.",
+    "details": "Built a patented livestock management system (US 63/415,411) using Raspberry Pi/Python for automated door control and RFID tracking!",
     "technologies": ["Python", "C++", "HTML/CSS/JS", "REST API", "Raspberry Pi"],
-    "status": "completed"
+    "status": "completed",
+    "link": "https://github.com/samihsq/open"
   }
 ]
