@@ -3,7 +3,7 @@
     "name": "StanfordPulse",
     "details": "Creating a full-stack application to provide real-time building occupancy data about Stanford facilites!",
     "role": ["Founder :D"],
-    "technologies": ["JavaScript (React, Material-UI)", "Python (FastAPI)", "BestTime.app API"],
+    "technologies": ["JavaScript (React, Material-UI)", "Python (FastAPI)"],
     "status": "in development",
     "link": "https://github.com/samihsq/stanford_pulse"
   },
