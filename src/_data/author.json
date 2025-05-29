@@ -15,12 +15,12 @@
     "addressCountry": "United States"
   },
   "telephone": "(510) 570-9771",
-  "website": "https://www.gurpreetsingh.me",
+  "website": "",
   "connect": [
     {
       "name": "linkedin",
       "icon": "<svg stroke=\"currentColor\" fill=\"currentColor\" stroke-width=\"0\" viewBox=\"0 0 448 512\" class=\"w-6 h-6\" height=\"1em\" width=\"1em\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M100.28 448H7.4V148.9h92.88zM53.79 108.1C24.09 108.1 0 83.5 0 53.8a53.79 53.79 0 0 1 107.58 0c0 29.7-24.1 54.3-53.79 54.3zM447.9 448h-92.68V302.4c0-34.7-.7-79.2-48.29-79.2-48.29 0-55.69 37.7-55.69 76.7V448h-92.78V148.9h89.08v40.8h1.3c12.4-23.5 42.69-48.3 87.88-48.3 94 0 111.28 61.9 111.28 142.3V448z\"></path></svg>",
-      "url": "https://www.linkedin.com/in/samih-qureshi-570/"
+      "url": "https://www.linkedin.com/in/samihsq/"
     },
     {
       "name": "Github",
@@ -135,15 +135,30 @@
   ],
   "worksFor": [
     {
-      "companyName": "Stanford Educational Neuroscience Lab",
-      "title": "Research Assistant",
-      "time_start": "October 2024",
+      "companyName": "Stanford Graduate Workers Union",
+      "title": "Undergraduate Software Engineer",
+      "time_start": "May 2025",
       "time_end": "Present",
-      "link": "https://edneuro.stanford.edu/",
+      "link": "sgwu.us",
       "address": {
         "streetAddress": "",
-        "addressLocality": "",
-        "addressRegion": "Stanford, CA",
+        "addressLocality": "Stanford",
+        "addressRegion": "CA",
+        "postalCode": "94305",
+        "addressCountry": "United States"
+      },
+      "isCurrent": true
+    },
+    {
+      "companyName": "Stanford Center for Asian Health Research and Education",
+      "title": "Program Administrator",
+      "time_start": "April 2025",
+      "time_end": "Present",
+      "link": "https://asianhealth.stanford.edu/",
+      "address": {
+        "streetAddress": "",
+        "addressLocality": "Stanford",
+        "addressRegion": "CA",
         "postalCode": "94305",
         "addressCountry": "United States"
       },
@@ -163,6 +178,51 @@
         "addressCountry": "United States"
       },
       "isCurrent": true
+    }, 
+    {
+      "companyName": "Stanford Educational Neuroscience Lab",
+      "title": "Research Assistant",
+      "time_start": "October 2024",
+      "time_end": "Present",
+      "link": "https://edneuro.stanford.edu/",
+      "address": {
+        "streetAddress": "",
+        "addressLocality": "",
+        "addressRegion": "Stanford, CA",
+        "postalCode": "94305",
+        "addressCountry": "United States"
+      },
+      "isCurrent": true
+    },
+    {
+      "companyName": "CO/AI",
+      "title": "Data Analyst",
+      "time_start": "March 2024",
+      "time_end": "May 2024",
+      "link": "",
+      "address": {
+        "streetAddress": "",
+        "addressLocality": "",
+        "addressRegion": "",
+        "postalCode": "",
+        "addressCountry": "United States"
+      },
+      "isCurrent": false
+    },
+    {
+      "companyName": "True Wild",
+      "title": "IoT Engineer",
+      "time_start": "March 2022",
+      "time_end": "June 2023",
+      "link": "https://www.truewild.org",
+      "address": {
+        "streetAddress": "",
+        "addressLocality": "Petaluma",
+        "addressRegion": "CA",
+        "postalCode": "94952",
+        "addressCountry": "United States"
+      },
+      "isCurrent": false
     }
   ],
   "alumniOf": [
