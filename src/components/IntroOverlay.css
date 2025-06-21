@@ -1,0 +1,32 @@
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  background: #2B2D31;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.intro-text {
+  text-align: center;
+  font-family: 'Helvetica Neue', sans-serif;
+}
+
+.intro-text h1 {
+  font-size: 2rem;
+  margin: 0;
+  color: #E3E5E8;
+}
+
+.intro-text .highlight {
+  font-weight: 700;
+  color: #43B581;
+}
+
+.intro-text p {
+  margin-top: 0.5rem;
+  font-size: 1.25rem;
+  color: #C7CDD4;
+} 

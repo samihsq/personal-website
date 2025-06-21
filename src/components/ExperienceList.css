@@ -1,0 +1,34 @@
+.experience-list {
+  margin-top: 2rem;
+  font-size: 0.9rem;
+}
+
+.experience-list h3 {
+  margin-bottom: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.exp-item {
+  margin-bottom: 1rem;
+}
+
+.exp-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.exp-org {
+  font-style: italic;
+  color: #555;
+  margin-bottom: 0.25rem;
+}
+
+.exp-item ul {
+  padding-left: 1rem;
+  list-style: disc inside;
+}
+
+.exp-item li {
+  margin-bottom: 0.25rem;
+} 

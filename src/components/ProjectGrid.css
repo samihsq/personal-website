@@ -1,0 +1,103 @@
+.project-grid-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tabs button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #42454A;
+  background: #35393E;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+  font-size: 0.85rem;
+  color: #E3E5E8;
+}
+
+.tabs button.active,
+.tabs button:hover {
+  background: #43B581;
+  color: #fff;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  border: 1px solid #42454A;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  background: #35393E;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  min-height: 140px;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.card-content {
+  padding: 0.75rem 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.card-content h4 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.card-content p {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: #C7CDD4;
+}
+
+.tech-icons {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: #E3E5E8;
+  font-size: 1.8rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card:hover .tech-icons {
+  opacity: 1;
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+} 

@@ -1,0 +1,17 @@
+/* Simple CSS reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  color: #E3E5E8; /* discord text */
+  background: #2B2D31; /* discord dark */
+}
+
+a {
+  color: #5865F2; /* discord blurple */
+} 

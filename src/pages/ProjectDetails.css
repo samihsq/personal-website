@@ -1,0 +1,30 @@
+.project-details {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: Arial, sans-serif;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: #111;
+  text-decoration: none;
+}
+
+.category {
+  font-weight: bold;
+  color: #666;
+}
+
+.gallery {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.gallery img {
+  width: 100%;
+  border-radius: 4px;
+} 
