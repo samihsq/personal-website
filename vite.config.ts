@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Edit this constant to match your GitHub username and repo name, e.g. '/<repo-name>/'
-const base = '/personal-website/';
+// Using root path since we have a custom domain
+const base = '/';
 
 export default defineConfig({
   plugins: [react()],
