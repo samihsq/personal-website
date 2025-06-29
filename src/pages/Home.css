@@ -9,7 +9,7 @@
 }
 
 .bio {
-  flex: 0 0 30%;
+  flex: 0 1 calc(30% - 1.5rem);
 }
 
 .bio h1,
@@ -50,7 +50,7 @@
 }
 
 .projects-section {
-  flex: 0 0 70%;
+  flex: 0 1 calc(70% - 1.5rem);
 }
 
 .projects-section h3 {
@@ -62,4 +62,17 @@
   color: #43B581;
 }
 
-/* additional styles preserved */ 
+/* additional styles preserved */
+
+@media (max-width: 768px) {
+  .home-container {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .bio,
+  .projects-section {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+} 

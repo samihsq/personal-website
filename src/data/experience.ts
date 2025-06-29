@@ -11,17 +11,6 @@ export interface Experience {
 
 export const experiences: Experience[] = [
   {
-    title: 'Program Administrator',
-    role: 'Program Administrator',
-    org: 'Stanford Department of Medicine',
-    location: 'Hybrid',
-    period: 'Apr 2025 – Present',
-    bullets: [
-      'Collaborating with Stanford Center for Asian Health Research and Education faculty to develop a summer curriculum for high-school students focused on statistical data analysis and AI tools for health datasets.'
-    ],
-    category: 'Data',
-  },
-  {
     title: 'Undergraduate Software Engineer',
     role: 'Software Engineer',
     org: 'Stanford Graduate Workers Union',
@@ -45,6 +34,17 @@ export const experiences: Experience[] = [
       'Implemented REST APIs with FastAPI, adopting component-based architecture to cut dev cycle time.'
     ],
     category: 'SWE',
+  },
+  {
+    title: 'Program Administrator',
+    role: 'Program Administrator',
+    org: 'Stanford Department of Medicine',
+    location: 'Hybrid',
+    period: 'Apr 2025 – June 2025',
+    bullets: [
+      'Collaborated with Stanford Center for Asian Health Research and Education faculty to develop a summer curriculum for high-school students focused on statistical data analysis and AI tools for health datasets.'
+    ],
+    category: 'Data',
   },
   {
     title: 'Course Assistant – Principles of Data Science',

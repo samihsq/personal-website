@@ -12,8 +12,7 @@ const Home = () => {
           Hi, I'm <span className="highlight">Samih.</span>
         </motion.h1>
         <p>
-          I'm a rising junior at Stanford, studying Computer Science! I enjoy
-          coming up with ideas and building, and also really enjoy singing! 😄
+          I'm a rising junior at Stanford, studying Computer Science. 
         </p>
         <div className="social-icons">
           <a

@@ -12,19 +12,18 @@
 
 .tabs button {
   padding: 0.5rem 1rem;
-  border: 1px solid #42454A;
-  background: #35393E;
+  background-color: #35393e;
+  color: #c7cdd4;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.2s;
-  font-size: 0.85rem;
-  color: #E3E5E8;
+  transition: all 0.2s ease;
 }
 
-.tabs button.active,
-.tabs button:hover {
-  background: #43B581;
-  color: #fff;
+.tabs button.active {
+  background-color: #43b581;
+  color: white;
+  font-weight: bold;
 }
 
 .grid {
