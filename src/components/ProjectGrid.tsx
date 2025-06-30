@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { projects, ProjectCategory } from "../data/projects";
-import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   SiNextdotjs,
   SiReact,
@@ -34,7 +35,7 @@ const techMap: Record<string, JSX.Element> = {
 
 const ProjectGrid = () => {
   const [selected, setSelected] = useState<(typeof categories)[number]>("All");
-  const navigate = useNavigate();
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const filtered =
     selected === "All"
@@ -55,26 +56,71 @@ const ProjectGrid = () => {
         ))}
       </div>
       <div className="grid">
-        {filtered.map((proj) => (
-          <div
-            key={proj.slug}
-            className="card"
-            onClick={() => navigate(`/project/${proj.slug}`)}
-            style={{ backgroundImage: `url(${proj.thumbnail})` }}
-          >
-            <div className="card-content">
-              <h4>{proj.title}</h4>
-              <p>{proj.summary}</p>
-            </div>
-            <div className="tech-icons">
-              {proj.tech.map((t) => (
-                <span key={t} className="icon-wrapper">
-                  {techMap[t]}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
+        {filtered.map((proj) => {
+          const isExpanded = expanded === proj.slug;
+
+          return (
+            <motion.div layout key={proj.slug} className="card-wrapper">
+              <button
+                className={`card ${isExpanded ? "expanded" : ""}`}
+                onClick={() => setExpanded(isExpanded ? null : proj.slug)}
+                style={{ backgroundImage: `url(${proj.thumbnail})` }}
+              >
+                <div className="card-content">
+                  <h4>{proj.title}</h4>
+                  <p>{proj.summary}</p>
+                </div>
+                <div className="tech-icons">
+                  {proj.tech.map((t) => (
+                    <span key={t} className="icon-wrapper">
+                      {techMap[t]}
+                    </span>
+                  ))}
+                </div>
+              </button>
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    key="content"
+                    initial={{ height: 0 }}
+                    animate={{ height: "auto" }}
+                    exit={{ height: 0 }}
+                    transition={{
+                      height: { duration: 0.7, ease: [0.22, 0.8, 0, 1] },
+                    }}
+                    style={{ overflow: "hidden" }}
+                    className="dropdown-content"
+                  >
+                    <div className="dropdown-inner">
+                      <p>{proj.description}</p>
+                      <div className="project-links">
+                        {proj.link && (
+                          <a
+                            href={proj.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            GitHub
+                          </a>
+                        )}
+                        {proj.demo && (
+                          <a
+                            href={proj.demo}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Live Demo
+                          </a>
+                        )}
+                        {/* <Link to={`/project/${proj.slug}`}>Details</Link> */}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );

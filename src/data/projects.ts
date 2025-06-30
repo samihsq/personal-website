@@ -32,7 +32,7 @@ export const projects: Project[] = [
         category: 'Robotics',
         summary: 'Autonomous robot for campus bike cleanup',
         description:
-          'A Raspberry Pi–powered robot that cruises Stanford paths, spots neglected bikes with a 97 %-accurate OpenCV/TensorFlow model, and drops the GPS locations into a Postgres DB so facilities can scoop them up.',
+          'A Raspberry Pi–powered robot that cruises Stanford paths, spots neglected bikes with a 97% accurate OpenCV/TensorFlow model, and drops the GPS locations into a Postgres DB so facilities can scoop them up.',
         thumbnail: 'images/bicycle_robot.png',
         tech: ['opencv', 'tensorflow', 'python', 'raspberrypi'],
       },
@@ -61,7 +61,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'orbis',
-    title: 'Orbis',
+    title: 'orbis',
     category: 'Data',
     summary: 'Real-time Twitter sentiment map',
     description:

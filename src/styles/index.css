@@ -10,7 +10,6 @@ body {
   line-height: 1.6;
   color: #E3E5E8; /* discord text */
   background: #2B2D31; /* discord dark */
-  overflow-x: hidden;
 }
 
 a {
