@@ -10,6 +10,7 @@
 
 .bio {
   flex: 0 1 calc(30% - 1.5rem);
+  margin-bottom: -0.5rem;
 }
 
 .bio h1,
@@ -59,7 +60,14 @@
 }
 
 .highlight {
-  color: #43B581;
+  color: #3b9f72;
+}
+
+.samih-line {
+  width: 170px;
+  margin-top: -10px;
+  margin-bottom: 15px;
+  filter: invert(58%) sepia(58%) saturate(300%) hue-rotate(99deg) brightness(94%) contrast(89%);
 }
 
 /* additional styles preserved */

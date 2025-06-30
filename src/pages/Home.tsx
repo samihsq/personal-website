@@ -11,9 +11,8 @@ const Home = () => {
         <motion.h1 layoutId="mainTitle">
           Hi, I'm <span className="highlight">Samih.</span>
         </motion.h1>
-        <p>
-          I'm a rising junior at Stanford, studying Computer Science. 
-        </p>
+        <img src="/images/samih-line.png" alt="" className="samih-line" />
+        <p>I'm a rising junior at Stanford, studying Computer Science.</p>
         <div className="social-icons">
           <a
             href="https://linkedin.com/in/samihsq"
