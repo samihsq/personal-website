@@ -12,6 +12,7 @@ import {
   SiRaspberrypi,
   SiCplusplus,
 } from "react-icons/si";
+import { FaLock } from "react-icons/fa";
 import "./ProjectGrid.css";
 
 const categories: (ProjectCategory | "All")[] = [
@@ -62,10 +63,20 @@ const ProjectGrid = () => {
           return (
             <motion.div layout key={proj.slug} className="card-wrapper">
               <button
-                className={`card ${isExpanded ? "expanded" : ""}`}
-                onClick={() => setExpanded(isExpanded ? null : proj.slug)}
+                className={`card ${isExpanded ? "expanded" : ""} ${
+                  proj.comingSoon ? "locked" : ""
+                }`}
+                onClick={() =>
+                  !proj.comingSoon && setExpanded(isExpanded ? null : proj.slug)
+                }
                 style={{ backgroundImage: `url(${proj.thumbnail})` }}
               >
+                {proj.comingSoon && (
+                  <div className="lock-overlay">
+                    <FaLock className="lock-icon" />
+                    <span className="coming-soon-text">Coming soon...</span>
+                  </div>
+                )}
                 <div className="card-content">
                   <h4>{proj.title}</h4>
                   <p>{proj.summary}</p>
@@ -79,7 +90,7 @@ const ProjectGrid = () => {
                 </div>
               </button>
               <AnimatePresence>
-                {isExpanded && (
+                {isExpanded && !proj.comingSoon && (
                   <motion.div
                     key="content"
                     initial={{ height: 0 }}

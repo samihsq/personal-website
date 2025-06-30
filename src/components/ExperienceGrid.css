@@ -47,7 +47,7 @@
 .exp-card {
   background: transparent;
   border-radius: 0;
-  padding: 1.25rem;
+  padding: 1.25rem 1.25rem 0.75rem 1.25rem;
   border: none;
   width: 100%;
   text-align: left;

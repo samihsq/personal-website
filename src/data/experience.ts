@@ -11,14 +11,14 @@ export interface Experience {
 
 export const experiences: Experience[] = [
   {
-    title: 'Undergraduate Software Engineer',
+    title: 'Software Engineer',
     role: 'Software Engineer',
     org: 'Stanford Graduate Workers Union',
     location: 'Stanford, CA',
     period: 'May 2025 – Present',
     bullets: [
+      'Architecting a React/Node.js carpool-coordination web app.',
       'Implemented custom AWS services enabling auth & GitHub Actions pipelines, boosting redirect throughput for 5,000+ monthly requests.',
-      'Architecting a React/Node.js carpool-coordination web app.'
     ],
     category: 'SWE',
     link: 'https://sgwu.us/',
@@ -30,8 +30,8 @@ export const experiences: Experience[] = [
     location: 'Stanford, CA',
     period: 'Oct 2024 – Present',
     bullets: [
+      'Building a CNN for math problem classification, for insights on the brain\'s math-learning process.',
       'Redesigned the SMARTE math assessment platform (React, TypeScript, Node.js/Express, jsPsych).',
-      'Implemented REST APIs with FastAPI, adopting component-based architecture to cut dev cycle time.'
     ],
     category: 'SWE',
   },
