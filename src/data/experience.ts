@@ -58,16 +58,4 @@ export const experiences: Experience[] = [
     ],
     category: 'Data',
   },
-  {
-    title: 'Data Analyst',
-    role: 'Data Analyst',
-    org: 'CO/AI',
-    location: 'Remote',
-    period: 'Mar 2024 – May 2024',
-    bullets: [
-      'Aggregated 20k+ AI articles via BeautifulSoup/REST pipeline to surface industry trends.',
-      'Built a scikit-learn classifier (92% accuracy) reducing manual analysis by 80%.'
-    ],
-    category: 'Data',
-  }
 ]; 
