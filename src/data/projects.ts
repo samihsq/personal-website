@@ -16,6 +16,19 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    slug: "re-search",
+    title: "re-search",
+    category: "Web",
+    summary:
+      "A web application to help Stanford students find and explore research opportunities on campus.",
+    description:
+      "re-search is a web application designed to help Stanford students find and explore research opportunities on campus. A web scraper automatically gathers opportunity data, a Python backend using Flask serves the collected data through an AWS-hosted REST API, and a React frontend provides a searchable and filterable user interface for browsing the opportunities.",
+    thumbnail: "images/re-search.png", 
+    tech: ["react", "typescript", "python", "flask", "web-scraping"],
+    link: "https://github.com/samihsq/re-search",
+    demo: "https://samihsq.github.io/re-search/",
+  },
+  {
     slug: "fastboard",
     title: "fastboard",
     category: "Web",
