@@ -10,9 +10,13 @@ import {
   SiOpencv,
   SiTensorflow,
   SiRaspberrypi,
+  SiTypescript,
   SiCplusplus,
+  SiDocker,
+  SiAmazonaws,
+  SiPostgresql,
 } from "react-icons/si";
-import { FaLock } from "react-icons/fa";
+import { FaLock, FaCode } from "react-icons/fa";
 import "./ProjectGrid.css";
 
 const categories: (ProjectCategory | "All")[] = [
@@ -25,13 +29,18 @@ const categories: (ProjectCategory | "All")[] = [
 const techMap: Record<string, JSX.Element> = {
   nextjs: <SiNextdotjs title="Next.js" />,
   react: <SiReact title="React" />,
+  typescript: <SiTypescript title="TypeScript" />,
   flask: <SiFlask title="Flask" />,
   python: <SiPython title="Python" />,
+  "web-scraping": <FaCode title="Web Scraping" />,
   opencv: <SiOpencv title="OpenCV" />,
   tensorflow: <SiTensorflow title="TensorFlow" />,
   raspberrypi: <SiRaspberrypi title="Raspberry Pi" />,
   cpp: <SiCplusplus title="C++" />,
   lora: <span className="tech-text">LoRa</span>,
+  docker: <SiDocker title="Docker" />,
+  aws: <SiAmazonaws title="AWS" />,
+  postgres: <SiPostgresql title="PostgreSQL" />,
 };
 
 const ProjectGrid = () => {
