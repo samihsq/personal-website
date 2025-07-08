@@ -11,6 +11,19 @@ export interface Experience {
 
 export const experiences: Experience[] = [
   {
+    title: "Software Engineer Intern",
+    role: "Software Engineer Intern",
+    org: "Bimi",
+    location: "Remote",
+    period: "July 2025 - Present",
+    bullets: [
+      "Enhancing mobile app onboarding experience for the numi AI therapy platform using React Native/Expo, improving user retention rates and reducing therapy session setup time through streamlined UI/UX design",
+      "Developing and optimizing web platform features with React/Next.js to support seamless user acquisition / engagement",
+    ],
+    category: "SWE",
+    link: "https://joinnumi.com/"
+  },
+  {
     title: 'Software Engineer',
     role: 'Software Engineer',
     org: 'Stanford Graduate Workers Union',

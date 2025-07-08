@@ -70,17 +70,20 @@ const ExperienceGrid = () => {
                         {exp.bullets.map((b) => {
                           const keywords = [
                             "AWS",
+                            "React Native",
                             "React",
                             "Node.js",
                             "Python",
                             "Raspberry Pi",
-                            "LoRa",
-                            "Machine Learning",
                             "FastAPI",
                             "Docker",
                             "Flask",
                             "C++",
                             "SQL",
+                            "Next.js",
+                            "Expo",
+                            "PostgreSQL",
+                            "TypeScript",
                           ];
                           let text = b;
                           keywords.forEach((k) => {
@@ -109,7 +112,7 @@ const ExperienceGrid = () => {
                           rel="noopener noreferrer"
                           className="exp-link"
                         >
-                          View Project
+                          View Site
                         </a>
                       )}
                     </div>
