@@ -16,11 +16,32 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    "slug": "cardipool",
+    "title": "cardipool",
+    "category": "Web",
+    "summary": "A full-stack carpooling platform for the Stanford community.",
+    "description": "A full-stack carpooling app built for the Stanford community. The platform uses a React front-end, a Node.js/Express back-end, and a PostgreSQL database to help students and staff find or offer rides. It integrates with Stanford's central SSO for secure authentication and is deployed on Vercel.",
+    "thumbnail": "images/cardipool.png",
+    "tech": [
+      "react",
+      "nodejs",
+      "express",
+      "postgres",
+      "saml",
+      "vite",
+      "css",
+      "vercel"
+    ],
+    "comingSoon": false,
+    "link": "https://github.com/samihsq/cardipool",
+    "demo": "https://cardipool.app"
+  },
+  {
     slug: "re-search",
     title: "re-search",
     category: "Web",
     summary:
-      "A web application to help Stanford students find and explore research opportunities on campus.",
+      "Find research opportunities at Stanford",
     description:
       "re-search is a web application designed to help Stanford students find and explore research opportunities on campus. A web scraper automatically gathers opportunity data, a Python backend using Flask serves the collected data through an AWS-hosted REST API, and a React frontend provides a searchable and filterable user interface for browsing the opportunities.",
     thumbnail: "images/re-search.png",
@@ -94,16 +115,7 @@ export const projects: Project[] = [
     tech: ["python", "tweepy", "textblob"],
     link: "https://github.com/samihsq/orbis",
   },
-  {
-    slug: "cardipool",
-    title: "cardipool",
-    category: "Web",
-    summary: "Carpool platform for Stanford students",
-    description: "",
-    thumbnail: "images/cardipool.png",
-    tech: [],
-    comingSoon: true,
-  },
+
   {
     slug: "the-stanford-bubble",
     title: "the stanford bubble",

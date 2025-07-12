@@ -5,18 +5,23 @@ import { Link } from "react-router-dom";
 import {
   SiNextdotjs,
   SiReact,
+  SiTypescript,
   SiFlask,
   SiPython,
   SiOpencv,
   SiTensorflow,
   SiRaspberrypi,
-  SiTypescript,
   SiCplusplus,
   SiDocker,
   SiAmazonaws,
   SiPostgresql,
+  SiNodedotjs,
+  SiExpress,
+  SiVite,
+  SiCss3,
+  SiVercel,
 } from "react-icons/si";
-import { FaLock, FaCode } from "react-icons/fa";
+import { FaLock, FaCode, FaShieldAlt } from "react-icons/fa";
 import "./ProjectGrid.css";
 
 const categories: (ProjectCategory | "All")[] = [
@@ -41,6 +46,12 @@ const techMap: Record<string, JSX.Element> = {
   docker: <SiDocker title="Docker" />,
   aws: <SiAmazonaws title="AWS" />,
   postgres: <SiPostgresql title="PostgreSQL" />,
+  nodejs: <SiNodedotjs title="Node.js" />,
+  express: <SiExpress title="Express" />,
+  saml: <FaShieldAlt title="SAML SSO" />,
+  vite: <SiVite title="Vite" />,
+  css: <SiCss3 title="CSS3" />,
+  vercel: <SiVercel title="Vercel" />,
 };
 
 const ProjectGrid = () => {
