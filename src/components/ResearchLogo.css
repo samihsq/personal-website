@@ -14,6 +14,7 @@
 }
 
 .research-logo .text-left {
+    font-size: 1.05em;
     margin-right: 0.1em;
 }
 
@@ -28,10 +29,11 @@
 }
 
 .research-logo .search-icon {
-    font-size: 0.8em;
+    font-size: 0.7em;
     color: white;
 }
 
 .research-logo .text-right {
+    font-size: 1.05em;
     margin-left: 0.1em;
 } 

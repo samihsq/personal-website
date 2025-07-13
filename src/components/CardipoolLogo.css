@@ -28,13 +28,17 @@
 
 @media (max-width: 480px) {
   .main-title {
-    flex-direction: column;
+    flex-direction: row; /* Keep horizontal layout on mobile */
     align-items: center;
     margin-right: 0;
     gap: 0.25rem;
   }
   .logo {
-    margin-right: 0;
-    margin-bottom: 0.25rem;
+    margin-right: 8px; /* Slightly reduce margin on mobile */
+    margin-bottom: 0; /* Remove bottom margin */
+    height: 32px; /* Slightly smaller logo on mobile */
+  }
+  .eco-title {
+    font-size: 1.3rem; /* Slightly smaller text on mobile */
   }
 } 
