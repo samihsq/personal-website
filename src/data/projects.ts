@@ -19,17 +19,16 @@ export const projects: Project[] = [
     "slug": "cardipool",
     "title": "cardipool",
     "category": "Web",
-    "summary": "A full-stack carpooling platform for the Stanford community.",
+    "summary": "A carpooling platform for the Stanford community",
     "description": "A full-stack carpooling app built for the Stanford community. The platform uses a React front-end, a Node.js/Express back-end, and a PostgreSQL database to help students and staff find or offer rides. It integrates with Stanford's central SSO for secure authentication and is deployed on Vercel.",
-    "thumbnail": "images/cardipool.png",
+    "thumbnail": "lightblue",
     "tech": [
       "react",
       "nodejs",
       "express",
       "postgres",
-      "saml",
       "vite",
-      "css",
+      "saml",
       "vercel"
     ],
     "comingSoon": false,
@@ -44,7 +43,7 @@ export const projects: Project[] = [
       "Find research opportunities at Stanford",
     description:
       "re-search is a web application designed to help Stanford students find and explore research opportunities on campus. A web scraper automatically gathers opportunity data, a Python backend using Flask serves the collected data through an AWS-hosted REST API, and a React frontend provides a searchable and filterable user interface for browsing the opportunities.",
-    thumbnail: "images/re-search.png",
+    thumbnail: "red",
     tech: [
       "react",
       "flask",
@@ -65,7 +64,7 @@ export const projects: Project[] = [
     summary: "Generate interactive dashboards from plain-language prompts",
     description:
       'Fastboard lets anyone type a simple sentence—"Show me Tesla stock over time"—and instantly get an interactive, shareable dashboard. I built the Next.js + Tailwind front-end and a Flask API that turns Perplexity-AI responses into Recharts widgets.',
-    thumbnail: "images/fastboard.png",
+    thumbnail: "gradient",
     tech: ["nextjs", "react", "flask", "python"],
     link: "https://github.com/samihsq/fastboard",
     demo: "https://fastboard-frontend.onrender.com/",
@@ -101,7 +100,9 @@ export const projects: Project[] = [
     description:
       "Led a research project leveraging California's environmental datasets to build a ridge-regression model that surfaces pollution-demographics correlations nationwide, exposing hotspots in the Cotton Belt and Southwest for environmental-justice policy.",
     thumbnail: "images/datasci_proj.png",
-    tech: ["python", "pandas", "scikit", "matplotlib"],
+    tech: ["python", 
+      // "pandas", "scikit", "matplotlib"
+    ],
     link: "https://github.com/samihsq/DataSci-112-Final",
   },
   {
@@ -112,7 +113,9 @@ export const projects: Project[] = [
     description:
       "Built a pipeline using Tweepy + TextBlob that streams tweets and visualises continental mood in real-time (pre-LLM era!).",
     thumbnail: "images/orbis.png",
-    tech: ["python", "tweepy", "textblob"],
+    tech: ["python"
+      // , "tweepy", "textblob"
+    ],
     link: "https://github.com/samihsq/orbis",
   },
 

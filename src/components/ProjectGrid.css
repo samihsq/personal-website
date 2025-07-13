@@ -67,6 +67,20 @@
   z-index: 0;
 }
 
+.card.fastboard {
+  background: transparent !important;
+}
+
+.card.fastboard::before {
+  background: linear-gradient(90deg, #8B5CF6 0%, #3B82F6 100%);
+  opacity: 0.5;
+}
+
+.card.red::before,
+.card.lightblue::before {
+  background: rgba(0,0,0,0.5);
+}
+
 .card:hover {
   box-shadow: none;
 }
@@ -78,7 +92,27 @@
 .card-content {
   padding: 0.75rem 1rem;
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  text-align: center;
+  min-height: 100px; /* Fixed height to lock header in place */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.card-content img,
+.card-content .logo,
+.card-content .research-logo,
+.card-content .fastboard-logo {
+  max-height: 48px;
+  height: 48px;
+  width: auto;
+  display: inline-block;
+}
+
+.card.locked .card-content {
+  opacity: 0.6;
 }
 
 .card-content h4 {
@@ -100,6 +134,7 @@
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
   overflow: hidden;
+  position: relative; /* Changed from absolute for natural expansion */
 }
 
 .dropdown-inner {
@@ -131,21 +166,35 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-content: center;
-  gap: 0.25rem 0.75rem;
+  flex-direction: column; /* Stack rows vertically */
+  justify-content: center; /* Center rows vertically in the container */
+  align-items: center; /* Center the entire block horizontally */
+  gap: 0.5rem; /* Space between rows */
   opacity: 0;
   transition: opacity 0.2s;
   color: #e3e5e8;
   font-size: 1.8rem;
   pointer-events: none;
-  z-index: 1;
+  z-index: 3;
   padding: 0.5rem;
+}
+
+.tech-row {
+  display: flex;
+  justify-content: center; /* Center icons in the row */
+  align-items: center;
+  gap: 0.75rem; /* Space between icons in a row */
+  width: 100%; /* Full width for centering */
+  flex-wrap: wrap; /* Allows wrapping if needed on very small cards */
 }
 
 .card:hover .tech-icons {
   opacity: 1;
+}
+
+.card:hover .card-content {
+  opacity: 1; /* Ensure no fade */
+  transition: none;
 }
 
 .icon-wrapper {
@@ -170,7 +219,8 @@
   font-size: 2.5rem;
   z-index: 2;
   overflow: hidden;
-  opacity: 0.9
+  opacity: 0.9;
+  pointer-events: none;
 }
 
 .lock-icon {
@@ -197,4 +247,10 @@
 .card.locked:hover .coming-soon-text {
   opacity: 0.7;
   transform: translateY(0);
+} 
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  /* No flex/grid centering */
 } 

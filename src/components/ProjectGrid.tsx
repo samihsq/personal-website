@@ -22,6 +22,10 @@ import {
   SiVercel,
 } from "react-icons/si";
 import { FaLock, FaCode, FaShieldAlt } from "react-icons/fa";
+import ResearchLogo from "./ResearchLogo";
+import CardipoolLogo from "./CardipoolLogo";
+import FastboardLogo from "./FastboardLogo";
+import CardipoolWave from "./CardipoolWave";
 import "./ProjectGrid.css";
 
 const categories: (ProjectCategory | "All")[] = [
@@ -85,12 +89,35 @@ const ProjectGrid = () => {
               <button
                 className={`card ${isExpanded ? "expanded" : ""} ${
                   proj.comingSoon ? "locked" : ""
-                }`}
+                }${proj.slug === "fastboard" ? " fastboard" : ""}${
+                  proj.thumbnail === "red" ? " red" : ""
+                }${proj.thumbnail === "lightblue" ? " lightblue" : ""}`}
                 onClick={() =>
                   !proj.comingSoon && setExpanded(isExpanded ? null : proj.slug)
                 }
-                style={{ backgroundImage: `url(${proj.thumbnail})` }}
+                style={{
+                  ...(proj.thumbnail === "gradient"
+                    ? {
+                        background:
+                          "linear-gradient(90deg, #8B5CF6 0%, #3B82F6 100%)",
+                        backgroundImage: "none",
+                      }
+                    : {
+                        backgroundImage:
+                          proj.thumbnail === "red" ||
+                          proj.thumbnail === "lightblue"
+                            ? "none"
+                            : `url(${proj.thumbnail})`,
+                        backgroundColor:
+                          proj.thumbnail === "red"
+                            ? "#b82525"
+                            : proj.thumbnail === "lightblue"
+                            ? "#4a90a4"
+                            : undefined,
+                      }),
+                }}
               >
+                {proj.slug === "cardipool" && <CardipoolWave />}
                 {proj.comingSoon && (
                   <div className="lock-overlay">
                     <FaLock className="lock-icon" />
@@ -98,15 +125,53 @@ const ProjectGrid = () => {
                   </div>
                 )}
                 <div className="card-content">
-                  <h4>{proj.title}</h4>
+                  <h4>
+                    {proj.slug === "re-search" ? (
+                      <ResearchLogo />
+                    ) : proj.slug === "cardipool" ? (
+                      <CardipoolLogo />
+                    ) : proj.slug === "fastboard" ? (
+                      <FastboardLogo />
+                    ) : (
+                      proj.title
+                    )}
+                  </h4>
                   <p>{proj.summary}</p>
                 </div>
                 <div className="tech-icons">
-                  {proj.tech.map((t) => (
-                    <span key={t} className="icon-wrapper">
-                      {techMap[t]}
-                    </span>
-                  ))}
+                  {(() => {
+                    const techList = proj.tech;
+                    const total = techList.length;
+                    let firstRow: string[] = techList;
+                    let secondRow: string[] = [];
+
+                    if (total > 6) {
+                      const firstRowCount = Math.ceil(total / 2);
+                      firstRow = techList.slice(0, firstRowCount);
+                      secondRow = techList.slice(firstRowCount);
+                    }
+
+                    return (
+                      <>
+                        <div className="tech-row">
+                          {firstRow.map((t) => (
+                            <span key={t} className="icon-wrapper">
+                              {techMap[t]}
+                            </span>
+                          ))}
+                        </div>
+                        {secondRow.length > 0 && (
+                          <div className="tech-row">
+                            {secondRow.map((t) => (
+                              <span key={t} className="icon-wrapper">
+                                {techMap[t]}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </button>
               <AnimatePresence>
