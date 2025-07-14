@@ -67,7 +67,7 @@ export const projects: Project[] = [
     thumbnail: "gradient",
     tech: ["nextjs", "react", "flask", "python"],
     link: "https://github.com/samihsq/fastboard",
-    demo: "https://fastboard-frontend.onrender.com/",
+    demo: "https://thefastboard.vercel.app/",
   },
   {
     slug: "abandoned-bicycle-detection",
