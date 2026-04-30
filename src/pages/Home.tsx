@@ -12,7 +12,7 @@ const Home = () => {
           Hi, I'm <span className="highlight">Samih.</span>
         </motion.h1>
         <img src="/images/samih-line.png" alt="" className="samih-line" />
-        <p>I'm a rising junior at Stanford, studying Computer Science.</p>
+        <p>I'm a junior at Stanford, studying Computer Science.</p>
         <div className="social-icons">
           <a
             href="https://linkedin.com/in/samihsq"

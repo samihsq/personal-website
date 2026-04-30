@@ -10,28 +10,42 @@ export interface Experience {
 }
 
 export const experiences: Experience[] = [
-{
-  title: "Research Associate",
-  role: "Research Associate", 
-  org: "Sully.ai",
-  location: "Mountain View, CA",
-  period: "August 2025 - Present",
-  bullets: [
-    "Architecting agentic scribe systems with React visualizers for medical note generation",
-    "Implementing open-source AI models with Langfuse tracing for cost-efficient deployment solutions",
-  ],
-  category: "SWE",
-},
-{
+  {
+    title: "Incoming Platform Architecture Intern",
+    role: "Incoming Platform Architecture Intern",
+    org: "Apple",
+    location: "Cupertino, CA",
+    period: "Summer 2026",
+    bullets: [
+      "Incoming intern on Apple's Platform Architecture team, working on software tools and services for internal customers",
+      "Expected to support cloud, embedded-device, and next-generation product workflows through systems-focused engineering",
+    ],
+    category: "SWE",
+  },
+  {
+    title: "Research Associate",
+    role: "Research Associate",
+    org: "Sully.ai",
+    location: "Mountain View, CA",
+    period: "August 2025 - Present",
+    bullets: [
+      "Building and evaluating agentic medical AI systems for clinical workflows, including scribe note generation, diagnosis coding, and provider-feedback analysis",
+      "Developed evaluation frameworks, logging, and visualizers to debug multi-agent pipelines and understand failure modes beyond aggregate metrics",
+      "Used Langfuse tracing and open-source LLMs to test cost-efficient deployment paths for production AI systems",
+    ],
+    category: "SWE",
+    link: "https://www.sully.ai/scribe"
+  },
+  {
   title: "Software Engineer Intern",
   role: "Software Engineer Intern",
   org: "Bimi", 
   location: "San Francisco, CA",
   period: "July 2025 - September 2025",
   bullets: [
-    "Leading development across two core products, building and deploying full-stack web and mobile applications from concept to launch",
-    "Engineering comprehensive user assessment platform using React/Next.js with algorithmic user categorization and personalized content delivery",
-    "Architecting TypeScript-based Firebase ecosystem with real-time Firestore synchronization across user and business databases, building mobile backend services and React/Next.js dashboard for restaurant reward program management",
+    "Lead development across two core products, building and deploying full-stack web and mobile applications from concept to launch",
+    "Engineered comprehensive user assessment platform using React/Next.js with algorithmic user categorization and personalized content delivery",
+    "Architected TypeScript-based Firebase ecosystem with real-time Firestore synchronization across user and business databases, building mobile backend services and React/Next.js dashboard for restaurant reward program management",
   ],
   category: "SWE",
   link: "https://joinnumi.com"
