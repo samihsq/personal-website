@@ -4,10 +4,10 @@ import { FiChevronDown } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import "./ExperienceGrid.css";
 
-const categories: ("All" | "SWE" | "Data")[] = ["All", "SWE", "Data"];
+const categories: ("All" | "Research" | "SWE" | "Data")[] = ["All", "Research", "SWE", "Data"];
 
 const ExperienceGrid = () => {
-  const [selected, setSelected] = useState<(typeof categories)[number]>("SWE");
+  const [selected, setSelected] = useState<(typeof categories)[number]>("All");
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const filtered =

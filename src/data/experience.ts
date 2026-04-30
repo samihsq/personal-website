@@ -6,7 +6,7 @@ export interface Experience {
   period: string;
   bullets: string[];
   link?: string;
-  category: 'SWE' | 'Data';
+  category: 'Research' | 'SWE' | 'Data';
 }
 
 export const experiences: Experience[] = [
@@ -23,20 +23,33 @@ export const experiences: Experience[] = [
     category: "SWE",
   },
   {
+    title: "Independent Researcher",
+    role: "Independent Researcher",
+    org: "Stanford Department of Computer Science",
+    location: "Stanford, CA",
+    period: "January 2026 - Present",
+    bullets: [
+      "Researching how component-level skills in small language models predict performance inside multi-agent systems",
+      "Designed benchmarks across tool calling, reasoning, instruction following, and summarization, evaluating 100+ SLM configurations with CrewAI",
+      "Studying how small models fail inside larger agentic systems, and how their skill profiles can guide orchestration and deployment choices",
+    ],
+    category: "Research",
+  },
+  {
     title: "Research Associate",
     role: "Research Associate",
     org: "Sully.ai",
     location: "Mountain View, CA",
-    period: "August 2025 - Present",
+    period: "August 2025 - March 2026",
     bullets: [
-      "Building and evaluating agentic medical AI systems for clinical workflows, including scribe note generation, diagnosis coding, and provider-feedback analysis",
+      "Built and evaluated agentic medical AI systems for clinical workflows, including scribe note generation, diagnosis coding, and provider-feedback analysis",
       "Developed evaluation frameworks, logging, and visualizers to debug multi-agent pipelines and understand failure modes beyond aggregate metrics",
       "Used Langfuse tracing and open-source LLMs to test cost-efficient deployment paths for production AI systems",
     ],
-    category: "SWE",
+    category: "Research",
     link: "https://www.sully.ai/scribe"
   },
-  {
+{
   title: "Software Engineer Intern",
   role: "Software Engineer Intern",
   org: "Bimi", 
