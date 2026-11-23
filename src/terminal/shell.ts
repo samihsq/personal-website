@@ -131,6 +131,8 @@ export type ShellAction =
   | { type: "theme"; color: string }
   | { type: "shutdown" }
   | { type: "dialog"; cmd: string }
+  /** bare `cat`: echo typed lines until ^D or ^C */
+  | { type: "stdin" }
   /** nano / vim: content null = new file (or a directory, when isDir). */
   | { type: "editor"; editor: "nano" | "vim"; name: string; content: string | null; isDir: boolean };
 
@@ -855,7 +857,9 @@ export function run(input: string, cols: number, history: string[], cwd = ""): S
     }
 
     case "cat":
-      if (arg) {
+      // no file: like the real cat, read what's typed and echo it back (until ^D / ^C)
+      if (!arg || arg === "-") return { lines: [], actions: [{ type: "stdin" }] };
+      {
         const file = openFile(args[0], cwd, "cat", cols);
         if (file) return file;
         if (!findProject(arg)) return { lines: wrap(`cat: ${arg}: No such file or directory`, cols) };

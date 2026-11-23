@@ -376,18 +376,50 @@ export function screenToCell(
 ): { col: number; row: number } | null {
   const rect = container.getBoundingClientRect();
   if (!rect.width || !rect.height) return null;
-  const px = (clientX - rect.left) / rect.width;
-  const py = (clientY - rect.top) / rect.height;
-  const aspect = rect.width / rect.height;
+  const [tx, ty] = uncurve((clientX - rect.left) / rect.width, (clientY - rect.top) / rect.height, rect.width / rect.height);
+  if (tx < 0 || tx > 1 || ty < 0 || ty > 1) return null;
+  return rawPixelToGrid(crt)(tx * rect.width, ty * rect.height);
+}
+
+/** Where on the (flat) text canvas a point on the curved screen shows; 0–1 coordinates. */
+function uncurve(px: number, py: number, aspect: number): [number, number] {
   const ccx = 0.5 - px;
   const ccy = 0.5 - py;
   const cx = aspect > 1 ? ccx / aspect : ccx;
   const cy = aspect > 1 ? ccy : ccy * aspect;
   const d = (cx * cx + cy * cy) * PICTURE.screenCurvature;
-  const tx = px - ccx * (1 + d) * d;
-  const ty = py - ccy * (1 + d) * d;
-  if (tx < 0 || tx > 1 || ty < 0 || ty > 1) return null;
-  return internals(crt).pixelToGrid(tx * rect.width, ty * rect.height);
+  return [px - ccx * (1 + d) * d, py - ccy * (1 + d) * d];
+}
+
+const originalPixelToGrid = new WeakMap<object, TextInternals["pixelToGrid"]>();
+const rawPixelToGrid = (crt: CRTTerminal) => {
+  const text = internals(crt);
+  return originalPixelToGrid.get(text) ?? text.pixelToGrid.bind(text);
+};
+
+/**
+ * The renderer's own mouse handling (drag to select text) maps the mouse to a
+ * cell as if the screen were flat, so near the curved edges the selection
+ * lands a row or a few columns away from the pointer. Route it through the
+ * same curvature correction the hover / click code uses.
+ */
+export function curveRendererMouse(crt: CRTTerminal, container: HTMLElement): () => void {
+  const text = internals(crt);
+  if (typeof text.pixelToGrid !== "function" || originalPixelToGrid.has(text)) return () => {};
+  const raw = text.pixelToGrid.bind(text);
+  originalPixelToGrid.set(text, raw);
+  text.pixelToGrid = (x: number, y: number) => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    if (!w || !h) return raw(x, y);
+    const [tx, ty] = uncurve(x / w, y / h, w / h);
+    const clamp = (v: number) => Math.min(Math.max(v, 0), 1);
+    return raw(clamp(tx) * w, clamp(ty) * h);
+  };
+  return () => {
+    text.pixelToGrid = raw;
+    originalPixelToGrid.delete(text);
+  };
 }
 
 /**

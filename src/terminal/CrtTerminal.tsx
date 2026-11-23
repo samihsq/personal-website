@@ -26,6 +26,7 @@ import { BANNER_GRADIENT, BURN_IN_FADE_MS, PICTURE, local, session, storageGet, 
 import {
   FONT,
   createPainter,
+  curveRendererMouse,
   drawChar,
   fitTextScale,
   fixTextureResize,
@@ -153,6 +154,7 @@ const CrtTerminalPage = () => {
 
     setupBurnIn(crt, BURN_IN_FADE_MS);
     const stopTextureFix = fixTextureResize(crt);
+    const stopMouseCurve = curveRendererMouse(crt, container);
     useFullColour(crt);
     const painter = createPainter(crt);
 
@@ -491,12 +493,54 @@ const CrtTerminalPage = () => {
         startPump();
         return;
       }
+      if (result.actions?.some((a) => a.type === "stdin")) {
+        catInput = ""; // bare `cat`: no prompt until ^D / ^C
+        return;
+      }
       showPrompt();
       // running a project / experience script opens its dialog
       for (const action of result.actions ?? []) {
         if (action.type === "dialog") openDialog(dialogFor(action.cmd));
         if (action.type === "editor") {
           openEditorScreen(openEditor(action.editor, action.name, action.content, action.isDir));
+        }
+      }
+    };
+
+    // ---- bare `cat`: echo each typed line back until ^D (on an empty line) or ^C ----
+    let catInput: string | null = null;
+
+    const catKey = (data: string) => {
+      if (catInput === null) return;
+      if (data === "\x03") {
+        catInput = null;
+        xterm.write("^C\r\n" + prompt());
+      } else if (data === "\x04") {
+        if (catInput) {
+          // ^D mid-line hands over what's typed so far, as a real tty does
+          xterm.write("\r\n" + catInput + "\r\n");
+          catInput = "";
+        } else {
+          catInput = null;
+          xterm.write(prompt());
+        }
+      } else if (data === "\r") {
+        xterm.write("\r\n" + catInput + "\r\n");
+        catInput = "";
+      } else if (data === "\x7f" || data === "\b") {
+        if (catInput) {
+          catInput = catInput.slice(0, -1);
+          xterm.write("\b \b");
+        }
+      } else if (!data.startsWith("\x1b")) {
+        for (const ch of data) {
+          if (ch === "\r" || ch === "\n") {
+            xterm.write("\r\n" + catInput + "\r\n");
+            catInput = "";
+          } else if (ch >= " " && catInput.length < cols() - 1) {
+            catInput += ch;
+            xterm.write(ch);
+          }
         }
       }
     };
@@ -702,6 +746,7 @@ const CrtTerminalPage = () => {
         flush();
         return;
       }
+      if (catInput !== null) return catKey(data);
       if (askingToList) {
         if (/^[yY ]$/.test(data)) {
           askingToList = false;
@@ -771,6 +816,10 @@ const CrtTerminalPage = () => {
     runRef.current = (cmd: string) => {
       if (poweredOff) return;
       if (countdown !== null) return cancelShutdown();
+      if (catInput !== null) {
+        catInput = null; // the shortcut bar interrupts a bare `cat`
+        xterm.write("^C\r\n");
+      }
       closeEditor(); // the shortcut bar leaves the editor
       closeDialog();
       if (busy) flush();
@@ -946,6 +995,7 @@ const CrtTerminalPage = () => {
       stopPointer();
       painter.dispose();
       stopTextureFix();
+      stopMouseCurve();
       dataSub.dispose();
       crt.dispose();
       xterm.dispose();
