@@ -219,7 +219,6 @@ export const HIDDEN_COMMANDS: Record<string, string> = {
   codex: "really?",
   opencode: "nice bro.",
   yes: "this is hosted on github, pal.",
-  rmdir: "The beautiful thing about learning is that no one can take it away from you.",
 };
 
 /** Hidden commands that do something; they complete the same way. */
@@ -251,7 +250,7 @@ export const ALL_COMMANDS = [
     ...Object.keys(HIDDEN_COMMANDS),
     ...SHUTDOWN_COMMANDS,
     ...EDITOR_COMMANDS,
-    ...["whoami", "links", "work", "gui", "exit", "cls", "sh", "bash", "source", ".", "sudo", "rm"],
+    ...["whoami", "links", "work", "gui", "exit", "cls", "sh", "bash", "source", ".", "sudo", "rm", "rmdir"],
   ]),
 ].sort((a, b) => a.localeCompare(b));
 
@@ -270,6 +269,7 @@ export function argCompletions(cmd: string, cwd = "", partial = ""): string[] {
     case "nvim":
       return pathCompletions(partial, cwd);
     case "cd":
+    case "rmdir":
       return pathCompletions(partial, cwd).filter((p) => p.endsWith("/"));
     case "sh":
     case "bash":
@@ -707,6 +707,39 @@ function headTail(name: "head" | "tail", args: string[], cwd: string, cols: numb
   return lines;
 }
 
+/**
+ * rmdir: errors like the real one until it's given an actual folder, which
+ * it then refuses to remove, because no one can take your learning away.
+ */
+const RMDIR_EGG = "The beautiful thing about learning is that no one can take it away from you.";
+
+function rmdir(args: string[], cwd: string, cols: number): string[] {
+  const dirs: string[] = [];
+  for (const a of args) {
+    if (a === "--help") return ["usage: rmdir [-pv] [--ignore-fail-on-non-empty] directory ..."];
+    if (/^-[pv]+$/.test(a) || a === "--parents" || a === "--verbose" || a === "--ignore-fail-on-non-empty") continue;
+    if (a.startsWith("-") && a.length > 1) {
+      return [`rmdir: invalid option -- '${a.replace(/^-+/, "")[0]}'`, "Try 'rmdir --help' for more information."];
+    }
+    dirs.push(a);
+  }
+  if (!dirs.length) return ["rmdir: missing operand", "Try 'rmdir --help' for more information."];
+
+  const lines: string[] = [];
+  let found = false;
+  for (const d of dirs) {
+    const where = resolvePath(d, cwd);
+    const last = d.replace(/\/+$/, "").split("/").pop() ?? "";
+    if (!where) lines.push(`rmdir: failed to remove '${d}': No such file or directory`);
+    else if (where.file) lines.push(`rmdir: failed to remove '${d}': Not a directory`);
+    else if (last === "." || last === "..") lines.push(`rmdir: failed to remove '${d}': Invalid argument`);
+    else if (!where.dir) lines.push(`rmdir: failed to remove '${d}': Permission denied`);
+    else found = true;
+  }
+  if (found) lines.push(...(lines.length ? [""] : []), ...wrap(RMDIR_EGG, cols));
+  return lines;
+}
+
 /** `cat` prints a file; `./x.sh` / `sh x.sh` run a script, which opens its dialog. */
 function openFile(path: string, cwd: string, how: "cat" | "exec", cols: number): ShellResult | null {
   const where = resolvePath(path, cwd);
@@ -792,6 +825,9 @@ export function run(input: string, cols: number, history: string[], cwd = ""): S
     case "head":
     case "tail":
       return { lines: headTail(cmd, args, cwd, cols) };
+
+    case "rmdir":
+      return { lines: rmdir(args, cwd, cols) };
 
     case "pwd":
       return { lines: [`/home/guest${cwd ? `/${cwd}` : ""}`] };
