@@ -1,0 +1,117 @@
+/* ---------- base / narrow layout: full-bleed screen + shortcut bar ---------- */
+
+.crt-page {
+  --crt-color: #0ccc68;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  color: var(--crt-color);
+  font-family: "Courier New", monospace;
+}
+
+.crt-center {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.crt-screen {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  cursor: text;
+}
+
+.crt-surface {
+  position: absolute;
+  inset: 0;
+  /* we handle swipes ourselves (scrolling the terminal) */
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.crt-screen canvas {
+  display: block;
+}
+
+/* Wide windows: keep the tube at 4:3 and centre it on black instead of stretching. */
+@media (min-aspect-ratio: 4/3) {
+  .crt-center {
+    align-items: center;
+    justify-content: center;
+    container-type: size;
+  }
+
+  .crt-screen {
+    flex: none;
+    width: min(100cqw, 100cqh * 4 / 3);
+    height: min(100cqh, 100cqw * 3 / 4);
+  }
+}
+
+/* xterm only handles input and the text buffer; keep it invisible but focusable. */
+.crt-xterm-host {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.crt-quickbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 1rem;
+  padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom));
+  font-size: 0.85rem;
+  background: #050505;
+  border-top: 1px solid color-mix(in srgb, var(--crt-color) 18%, transparent);
+}
+
+.crt-quickbar button,
+.crt-quickbar a {
+  background: none;
+  border: none;
+  color: color-mix(in srgb, var(--crt-color) 70%, #000);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0.25rem 0.25rem;
+}
+
+.crt-quickbar button::before,
+.crt-quickbar a::before {
+  content: "> ";
+  opacity: 0.6;
+}
+
+.crt-quickbar button:hover,
+.crt-quickbar a:hover,
+.crt-quickbar button:focus-visible,
+.crt-quickbar a:focus-visible {
+  color: var(--crt-color);
+  text-shadow: 0 0 6px var(--crt-color);
+  outline: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

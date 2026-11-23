@@ -84,3 +84,15 @@
     min-width: 0;
   }
 } 
+.terminal-link {
+  display: inline-block;
+  margin-top: 1rem;
+  font-family: "Courier New", monospace;
+  font-size: 0.95rem;
+  color: #0ccc68;
+  text-decoration: none;
+}
+
+.terminal-link:hover {
+  text-shadow: 0 0 6px rgba(12, 204, 104, 0.7);
+}

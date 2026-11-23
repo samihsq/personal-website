@@ -118,15 +118,4 @@ export const projects: Project[] = [
     ],
     link: "https://github.com/samihsq/orbis",
   },
-
-  {
-    slug: "the-stanford-bubble",
-    title: "the stanford bubble",
-    category: "Web",
-    summary: "Dashboard for Stanford-built web apps",
-    description: "",
-    thumbnail: "images/stanford_bubble.png",
-    tech: [],
-    comingSoon: true,
-  },
 ];

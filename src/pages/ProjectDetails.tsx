@@ -10,14 +10,14 @@ const ProjectDetails = () => {
     return (
       <main className="project-details">
         <p>Project not found.</p>
-        <Link to="/">Back to main</Link>
+        <Link to="/classic">Back to main</Link>
       </main>
     );
   }
 
   return (
     <main className="project-details">
-      <Link to="/" className="back-link">
+      <Link to="/classic" className="back-link">
         &larr; back to main
       </Link>
       <h2>{project.title}</h2>

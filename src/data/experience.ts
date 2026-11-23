@@ -11,14 +11,14 @@ export interface Experience {
 
 export const experiences: Experience[] = [
   {
-    title: "Incoming Platform Architecture Intern",
-    role: "Incoming Platform Architecture Intern",
+    title: "Platform Architecture Intern",
+    role: "Platform Architecture Intern",
     org: "Apple",
     location: "Cupertino, CA",
     period: "Summer 2026",
     bullets: [
-      "Incoming intern on Apple's Platform Architecture team, working on software tools and services for internal customers",
-      "Expected to support cloud, embedded-device, and next-generation product workflows through systems-focused engineering",
+      "Built an MCP server",
+      "Built a novel MCP server benchmark",
     ],
     category: "SWE",
   },
