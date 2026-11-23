@@ -15,7 +15,7 @@ export const experiences: Experience[] = [
     role: "Platform Architecture Intern",
     org: "Apple",
     location: "Cupertino, CA",
-    period: "Summer 2026",
+    period: "June 2026 - September 2026",
     bullets: [
       "Built an MCP server",
       "Built a novel MCP server benchmark",
@@ -27,7 +27,7 @@ export const experiences: Experience[] = [
     role: "Independent Researcher",
     org: "Stanford Department of Computer Science",
     location: "Stanford, CA",
-    period: "January 2026 - Present",
+    period: "January 2026 - April 2026",
     bullets: [
       "Researching how component-level skills in small language models predict performance inside multi-agent systems",
       "Designed benchmarks across tool calling, reasoning, instruction following, and summarization, evaluating 100+ SLM configurations with CrewAI",

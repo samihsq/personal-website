@@ -104,6 +104,48 @@
   outline: none;
 }
 
+/* ---------- shutdown (the switch-off itself is drawn on the tube) ---------- */
+
+.crt-powering-off .crt-screen {
+  pointer-events: none;
+}
+
+.crt-powering-off .crt-quickbar {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.crt-off {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 16px;
+  text-align: center;
+  color: color-mix(in srgb, var(--crt-color) 55%, #000);
+  cursor: pointer;
+  animation: crt-off-fade 1.2s 0.3s both;
+}
+
+.crt-off p {
+  margin: 0;
+}
+
+.crt-off-hint {
+  font-size: clamp(1rem, 2.4vmin, 1.4rem);
+  opacity: 0.75;
+}
+
+@keyframes crt-off-fade {
+  from {
+    opacity: 0;
+  }
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

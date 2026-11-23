@@ -131,6 +131,8 @@ export interface Painter {
   /** Final colouring step for the terminal (not full-screen UIs). */
   setTint: (draw: Overlay | null) => void;
   setScreen: (screen: Screen | null) => void;
+  /** Drawn last, over everything and untinted (e.g. the power-off effect). */
+  setFinal: (draw: Overlay | null) => void;
   hasScreen: () => boolean;
   refresh: () => void;
   dispose: () => void;
@@ -162,6 +164,7 @@ export function createPainter(crt: CRTTerminal): Painter {
     setOverlay: () => {},
     setTint: () => {},
     setScreen: () => {},
+    setFinal: () => {},
     hasScreen: () => false,
     refresh: () => {},
     dispose: () => {},
@@ -172,6 +175,7 @@ export function createPainter(crt: CRTTerminal): Painter {
   const overlays = new Map<string, Overlay>();
   let tint: Overlay | null = null;
   let screen: Screen | null = null;
+  let final: Overlay | null = null;
 
   const metrics = (): Metrics => ({
     cols: text.cols,
@@ -244,6 +248,11 @@ export function createPainter(crt: CRTTerminal): Painter {
       overlays.forEach(run);
       if (tint) run(tint);
     }
+    if (final) {
+      text.ctx.save();
+      final(text.ctx, metrics());
+      text.ctx.restore();
+    }
     text.texture.needsUpdate = true;
   };
 
@@ -260,6 +269,10 @@ export function createPainter(crt: CRTTerminal): Painter {
     },
     setScreen: (s) => {
       screen = s;
+      text.render();
+    },
+    setFinal: (draw) => {
+      final = draw;
       text.render();
     },
     hasScreen: () => screen !== null,

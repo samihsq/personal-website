@@ -13,17 +13,132 @@ export const LINKS: Record<string, string> = {
   linkedin: "https://linkedin.com/in/samihsq",
 };
 
+// ---------------------------------------------------------------------------
+// A tiny read-only filesystem, for people who reach for cd / ls / cat.
+//   ~/projects/projects.txt     cat -> same as `projects`
+//   ~/projects/cardipool.sh     ./ or sh -> that project's dialog; cat -> its source
+// ---------------------------------------------------------------------------
+
+type FsFile = { kind: "text"; cmd: string } | { kind: "script"; open: string };
+
+const ORG_STOPWORDS = new Set(["of", "the", "department", "school", "university", "lab", "and"]);
+function orgSlug(org: string) {
+  const words = org
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(" ")
+    .filter((w) => !ORG_STOPWORDS.has(w));
+  return words.slice(0, 2).join("-") || "role";
+}
+
+function buildFs(): Record<string, Record<string, FsFile>> {
+  const projectsDir: Record<string, FsFile> = { "projects.txt": { kind: "text", cmd: "projects" } };
+  for (const p of projects.filter((x) => !x.comingSoon)) {
+    projectsDir[`${p.slug}.sh`] = { kind: "script", open: `project ${p.slug}` };
+  }
+  const experienceDir: Record<string, FsFile> = { "experience.txt": { kind: "text", cmd: "experience" } };
+  experiences.forEach((e, i) => {
+    experienceDir[`${i + 1}-${orgSlug(e.org)}.sh`] = { kind: "script", open: `exp ${i + 1}` };
+  });
+  return {
+    about: { "about.txt": { kind: "text", cmd: "about" } },
+    projects: projectsDir,
+    experience: experienceDir,
+    contact: { "contact.txt": { kind: "text", cmd: "contact" } },
+  };
+}
+
+const FS = buildFs();
+const DIRECTORIES = Object.keys(FS);
+
+/** A path resolved against the current directory ("" is home). */
+type FsPath = { dir: string; file?: string };
+
+function resolvePath(path: string, cwd: string): FsPath | null {
+  const fromHome = path.startsWith("~") || path.startsWith("/");
+  const segments = [...(fromHome || !cwd ? [] : [cwd]), ...path.replace(/^~/, "").split("/")];
+  const stack: string[] = [];
+  for (const seg of segments) {
+    if (!seg || seg === ".") continue;
+    if (seg === "..") stack.pop();
+    else stack.push(seg);
+  }
+  if (stack.length === 0) return { dir: "" };
+  const dir = FS[stack[0]];
+  if (!dir) return null;
+  if (stack.length === 1) return { dir: stack[0] };
+  if (stack.length === 2 && dir[stack[1]]) return { dir: stack[0], file: stack[1] };
+  return null;
+}
+
+/** The entries of a directory as `ls` prints them. */
+function entries(dir: string): string[] {
+  return dir ? Object.keys(FS[dir]) : DIRECTORIES.map((d) => `${d}/`);
+}
+
+/** Names in columns, filled top to bottom like `ls`. */
+export function columns(names: string[], cols: number): string[] {
+  const width = Math.max(...names.map((n) => n.length)) + 2;
+  const perRow = Math.max(1, Math.floor((cols + 2) / width));
+  const rows = Math.ceil(names.length / perRow);
+  const lines: string[] = [];
+  for (let r = 0; r < rows; r++) {
+    let line = "";
+    for (let c = 0; c < perRow; c++) {
+      const name = names[c * rows + r];
+      if (name) line += name.padEnd(width);
+    }
+    lines.push(line.trimEnd());
+  }
+  return lines;
+}
+
+/** Every file/dir name that could finish `partial` (a path) from `cwd`. */
+export function pathCompletions(partial: string, cwd: string, scriptsOnly = false): string[] {
+  const slash = partial.lastIndexOf("/");
+  const base = slash >= 0 ? partial.slice(0, slash + 1) : "";
+  const where = base ? resolvePath(base, cwd) : { dir: cwd };
+  if (!where || where.file) return [];
+  return entries(where.dir)
+    .filter((name) => !scriptsOnly || name.endsWith("/") || name.endsWith(".sh"))
+    .map((name) => base + name);
+}
+
+/** File or directory by bare name (names are unique across the tree). */
+function entryByName(name: string): { dir: string; file?: string; entry?: FsFile } | null {
+  const bare = name.replace(/\/$/, "");
+  if (FS[bare]) return { dir: bare };
+  for (const [dir, files] of Object.entries(FS)) if (files[name]) return { dir, file: name, entry: files[name] };
+  return null;
+}
+
 export const PROMPT = "guest@samih.dev:~$ ";
+
+/** The prompt for a directory, shortened on narrow screens. */
+export function promptFor(cwd: string, termCols: number) {
+  const where = cwd ? `~/${cwd}` : "~";
+  const full = `guest@samih.dev:${where}$ `;
+  if (termCols >= full.length + 24) return full;
+  if (cwd && termCols >= where.length + 26) return `${where}$ `;
+  return "$ ";
+}
 
 export type ShellAction =
   | { type: "clear" }
   | { type: "open"; url: string }
   | { type: "classic" }
-  | { type: "theme"; color: string };
+  | { type: "theme"; color: string }
+  | { type: "shutdown" }
+  | { type: "dialog"; cmd: string }
+  /** nano / vim: content null = new file (or a directory, when isDir). */
+  | { type: "editor"; editor: "nano" | "vim"; name: string; content: string | null; isDir: boolean };
 
 export interface ShellResult {
   lines: string[];
   actions?: ShellAction[];
+  /** New working directory, after `cd`. */
+  cwd?: string;
 }
 
 export const THEMES: Record<string, string> = {
@@ -100,26 +215,67 @@ export const COMMANDS: { name: string; usage: string; desc: string }[] = [
  * but they still complete once you've typed the start of one.
  */
 export const HIDDEN_COMMANDS: Record<string, string> = {
-  claude: "ok bro",
+  claude: "ok bro.",
   codex: "really?",
-  opencode: "nice bro",
+  opencode: "nice bro.",
+  yes: "this is hosted on github, pal.",
+  rmdir: "The beautiful thing about learning is that no one can take it away from you.",
 };
+
+/** Hidden commands that do something; they complete the same way. */
+export const SHUTDOWN_COMMANDS = ["shutdown", "poweroff", "halt"];
+
+/** Hidden editors (read-only files: you can look, not save). */
+export const EDITOR_COMMANDS = ["nano", "vim", "vi", "nvim"];
+export const SHUTDOWN_SECONDS = 5;
 
 export const COMPLETIONS = [
   ...COMMANDS.map((c) => c.name),
   "whoami",
   "ls",
+  "cd",
+  "pwd",
+  "cat",
+  "head",
+  "tail",
   "history",
   "banner",
   "echo",
   "date",
 ];
 
+/** Every command the shell answers to, hidden ones included (double TAB lists them). */
+export const ALL_COMMANDS = [
+  ...new Set([
+    ...COMPLETIONS,
+    ...Object.keys(HIDDEN_COMMANDS),
+    ...SHUTDOWN_COMMANDS,
+    ...EDITOR_COMMANDS,
+    ...["whoami", "links", "work", "gui", "exit", "cls", "sh", "bash", "source", ".", "sudo", "rm"],
+  ]),
+].sort((a, b) => a.localeCompare(b));
+
 /** Arguments that tab-complete after a given command. */
-export function argCompletions(cmd: string): string[] {
+export function argCompletions(cmd: string, cwd = "", partial = ""): string[] {
   switch (cmd) {
-    case "project":
     case "cat":
+      // files first; at home `cat <project>` still works as a shortcut
+      return [...pathCompletions(partial, cwd), ...(cwd || partial.includes("/") ? [] : visibleProjects.map((p) => p.slug))];
+    case "ls":
+    case "head":
+    case "tail":
+    case "nano":
+    case "vi":
+    case "vim":
+    case "nvim":
+      return pathCompletions(partial, cwd);
+    case "cd":
+      return pathCompletions(partial, cwd).filter((p) => p.endsWith("/"));
+    case "sh":
+    case "bash":
+    case "source":
+      return pathCompletions(partial, cwd, true);
+    case "project":
       return visibleProjects.map((p) => p.slug);
     case "open":
       return [...visibleProjects.map((p) => p.slug), ...Object.keys(LINKS)];
@@ -249,14 +405,31 @@ export function clickTarget(
     }
   }
 
-  // `ls` output: "about/  projects/  experience/  contact/"
-  if (/^(\w+\/\s*)+$/.test(line)) {
-    for (const m of line.matchAll(/(\w+)\//g)) {
+  // `ls -l` rows: "-rwxr-xr-x 1 samih samih 812 Nov 23 14:02 cardipool.sh"
+  const longRow = line.match(/^[d-][rwx-]{9}\s+\d+\s+\S+\s+\S+\s+\S+\s+\w{3}\s+\d+\s+[\d:]+\s+(\S+?)[/*]?\s*$/);
+  if (longRow) {
+    const name = longRow[1].split("/").pop() ?? "";
+    const start = line.lastIndexOf(longRow[1]);
+    const end = start + longRow[1].length;
+    if (col < start || col >= end) return null;
+    if (FS[name]) return { start, end, cmd: `cd ~/${name}` };
+    const found = entryByName(name);
+    if (!found?.entry) return null;
+    return { start, end, cmd: found.entry.kind === "script" ? found.entry.open : found.entry.cmd };
+  }
+
+  // `ls` output: "about/  projects/ ..." or "projects.txt  cardipool.sh ..."
+  if (/^([\w.-]+[/*]?)(\s+[\w.-]+[/*]?)*\s*$/.test(line)) {
+    for (const m of line.matchAll(/[\w.-]+[/*]?/g)) {
       const start = m.index ?? 0;
       const end = start + m[0].length;
-      if (col >= start && col < end && COMMAND_NAMES.has(m[1])) return { start, end, cmd: m[1] };
+      if (col < start || col >= end) continue;
+      const found = entryByName(m[0].replace(/\*$/, ""));
+      if (!found || (!found.entry && !m[0].endsWith("/"))) break;
+      if (!found.entry) return { start, end, cmd: `cd ~/${found.dir}` };
+      const cmd = found.entry.kind === "script" ? found.entry.open : found.entry.cmd;
+      return { start, end, cmd };
     }
-    return null;
   }
 
   // contact lines: "github    https://..."
@@ -344,13 +517,225 @@ export function clickTarget(
   return null;
 }
 
-export function run(input: string, cols: number, history: string[]): ShellResult {
-  const [rawCmd, ...args] = input.trim().split(/\s+/);
-  const cmd = (rawCmd ?? "").toLowerCase();
+// ---------------------------------------------------------------------------
+// ls, with the usual flags: -l long, -a all, -h human sizes, -F type marks,
+// -r reverse, -1 one per line (-A accepted; there are no dotfiles).
+// ---------------------------------------------------------------------------
+
+interface LsEntry {
+  name: string;
+  dir: boolean;
+  exec: boolean;
+  size: number;
+  links: number;
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/** Every file was "modified" when the page loaded. */
+const MTIME = (() => {
+  const d = new Date();
+  const two = (n: number) => String(n).padStart(2, "0");
+  return `${MONTHS[d.getMonth()]} ${String(d.getDate()).padStart(2)} ${two(d.getHours())}:${two(d.getMinutes())}`;
+})();
+
+/** Size of a file's (pretend) contents. */
+function fileSize(f: FsFile): number {
+  return fileText(f, 80).length;
+}
+
+/**
+ * What a file "contains" (what nano / vim show). Text files hold their
+ * command's output; scripts are the whiptail call that shows the dialog.
+ */
+function fileText(f: FsFile, width: number): string {
+  if (f.kind === "text") return run(f.cmd, Math.min(width, 80), []).lines.join("\n") + "\n";
+  const [kind, id] = f.open.split(" ");
+  const p = kind === "project" ? projects.find((x) => x.slug === id) : undefined;
+  const e = kind === "exp" ? experiences[parseInt(id, 10) - 1] : undefined;
+  const title = (p?.title ?? e?.role ?? "").replace(/"/g, '\\"');
+  const subtitle = p ? p.summary : e ? `${e.org}, ${e.period}` : "";
+  const body = p ? [p.description || p.summary] : (e?.bullets ?? []).map((b) => `- ${b}`);
+  const w = Math.max(Math.min(width, 64), 20);
+  return [
+    "#!/bin/sh",
+    `# ${subtitle}`,
+    "",
+    `exec whiptail --title "${title}" --msgbox "\\`,
+    ...body.flatMap((para) => wrap(para.replace(/"/g, '\\"'), w)),
+    '" 20 72',
+    "",
+  ].join("\n");
+}
+
+function dirEntry(name: string, links: number): LsEntry {
+  return { name, dir: true, exec: true, size: 4096, links };
+}
+
+function lsEntries(dir: string, all: boolean): LsEntry[] {
+  const list: LsEntry[] = dir
+    ? Object.entries(FS[dir]).map(([name, f]) => ({
+        name,
+        dir: false,
+        exec: f.kind === "script",
+        size: fileSize(f),
+        links: 1,
+      }))
+    : DIRECTORIES.map((d) => dirEntry(d, 2));
+  list.sort((a, b) => a.name.localeCompare(b.name));
+  const homeLinks = 2 + DIRECTORIES.length;
+  if (all) list.unshift(dirEntry(".", dir ? 2 : homeLinks), dirEntry("..", dir ? homeLinks : 3));
+  return list;
+}
+
+function human(size: number) {
+  if (size < 1024) return String(size);
+  const k = size / 1024;
+  return k < 10 ? `${k.toFixed(1)}K` : `${Math.round(k)}K`;
+}
+
+function ls(args: string[], cwd: string, cols: number): string[] {
+  const flags = new Set<string>();
+  const paths: string[] = [];
+  for (const a of args) {
+    if (a === "--all") flags.add("a");
+    else if (a === "--help") return ["usage: ls [-laAhF1r] [path ...]"];
+    else if (a.startsWith("--")) return [`ls: unrecognized option '${a}'`, "Try 'ls --help' for more information."];
+    else if (a.startsWith("-") && a.length > 1) {
+      for (const ch of a.slice(1)) {
+        if (!"laAhF1r".includes(ch)) return [`ls: invalid option -- '${ch}'`, "Try 'ls --help' for more information."];
+        flags.add(ch);
+      }
+    } else paths.push(a);
+  }
+  const long = flags.has("l");
+  const mark = (e: LsEntry) =>
+    e.dir ? (long && !flags.has("F") ? "" : "/") : flags.has("F") && e.exec ? "*" : "";
+
+  const longRows = (list: LsEntry[]) => {
+    const size = (e: LsEntry) => (flags.has("h") ? human(e.size) : String(e.size));
+    const linkW = Math.max(...list.map((e) => String(e.links).length));
+    const sizeW = Math.max(...list.map((e) => size(e).length));
+    return list.map((e) => {
+      const mode = e.dir ? "drwxr-xr-x" : e.exec ? "-rwxr-xr-x" : "-rw-r--r--";
+      return `${mode} ${String(e.links).padStart(linkW)} samih samih ${size(e).padStart(sizeW)} ${MTIME} ${e.name}${mark(e)}`;
+    });
+  };
+
+  const listDir = (dir: string) => {
+    const list = lsEntries(dir, flags.has("a"));
+    if (flags.has("r")) list.reverse();
+    if (!long) {
+      const names = list.map((e) => e.name + mark(e));
+      return flags.has("1") ? names : columns(names, cols);
+    }
+    const blocks = list.reduce((n, e) => n + Math.ceil(e.size / 4096) * 4, 0);
+    return [`total ${flags.has("h") ? `${blocks}K` : blocks}`, ...longRows(list)];
+  };
+
+  if (!paths.length) return listDir(cwd);
+  const lines: string[] = [];
+  paths.forEach((p, i) => {
+    const where = resolvePath(p, cwd);
+    if (!where) {
+      lines.push(`ls: cannot access '${p}': No such file or directory`);
+    } else if (where.file) {
+      const entry = lsEntries(where.dir, false).find((e) => e.name === where.file)!;
+      lines.push(long ? longRows([entry])[0].replace(/ \S+$/, ` ${p}${mark(entry)}`) : p);
+    } else {
+      if (paths.length > 1) lines.push(...(i ? [""] : []), `${p}:`);
+      lines.push(...listDir(where.dir));
+    }
+  });
+  return lines;
+}
+
+/**
+ * head / tail: first or last lines of files (10 by default).
+ *   -n N, -N        number of lines        head -n -N   all but the last N
+ *   tail -n +N      from line N on         -q / -v      never / always print headers
+ */
+function headTail(name: "head" | "tail", args: string[], cwd: string, cols: number): string[] {
+  let count = 10;
+  let fromStart = false; // tail -n +N, or head -n -N (counts from the other end)
+  let headers: boolean | null = null;
+  const files: string[] = [];
+  const parseCount = (value: string | undefined): string | null => {
+    const m = value?.match(/^([+-]?)(\d+)$/);
+    if (!m) return `${name}: invalid number of lines: '${value ?? ""}'`;
+    count = parseInt(m[2], 10);
+    fromStart = name === "tail" ? m[1] === "+" : m[1] === "-";
+    return null;
+  };
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    let error: string | null = null;
+    if (a === "-n" || a === "--lines") error = parseCount(args[++i]);
+    else if (/^-n[+-]?\d+$/.test(a)) error = parseCount(a.slice(2));
+    else if (/^--lines=/.test(a)) error = parseCount(a.slice(8));
+    else if (/^-\d+$/.test(a)) error = parseCount(a.slice(1));
+    else if (name === "tail" && /^\+\d+$/.test(a)) error = parseCount(a);
+    else if (a === "-q" || a === "--quiet" || a === "--silent") headers = false;
+    else if (a === "-v" || a === "--verbose") headers = true;
+    else if (a === "-f" || a === "-F" || a === "--follow") continue; // nothing here ever changes
+    else if (a === "--help") return [`usage: ${name} [-n lines] [-qv] file ...`];
+    else if (a.startsWith("-") && a.length > 1) {
+      return [`${name}: invalid option -- '${a.replace(/^-+/, "")[0]}'`, `Try '${name} --help' for more information.`];
+    } else files.push(a);
+    if (error) return [error];
+  }
+  if (!files.length) return [`usage: ${name} [-n lines] file ...`];
+
+  const lines: string[] = [];
+  const showHeaders = headers ?? files.length > 1;
+  files.forEach((path, i) => {
+    const where = resolvePath(path, cwd);
+    if (!where) {
+      lines.push(`${name}: cannot open '${path}' for reading: No such file or directory`);
+      return;
+    }
+    if (!where.file) {
+      lines.push(`${name}: error reading '${path}': Is a directory`);
+      return;
+    }
+    const all = fileText(FS[where.dir][where.file], cols).replace(/\n$/, "").split("\n");
+    let picked: string[];
+    if (name === "head") picked = fromStart ? all.slice(0, Math.max(all.length - count, 0)) : all.slice(0, count);
+    else picked = fromStart ? all.slice(Math.max(count - 1, 0)) : count ? all.slice(-count) : [];
+    if (showHeaders) lines.push(...(i ? [""] : []), `==> ${path} <==`);
+    lines.push(...picked);
+  });
+  return lines;
+}
+
+/** `cat` prints a file; `./x.sh` / `sh x.sh` run a script, which opens its dialog. */
+function openFile(path: string, cwd: string, how: "cat" | "exec", cols: number): ShellResult | null {
+  const where = resolvePath(path, cwd);
+  if (!where) return null;
+  const name = how === "cat" ? "cat" : "sh";
+  if (!where.file) return { lines: [`${name}: ${path}: Is a directory`] };
+  const file = FS[where.dir][where.file];
+  // cat prints what's in the file (a script's source); running a script opens its dialog
+  if (how === "cat") return { lines: fileText(file, cols).replace(/\n$/, "").split("\n") };
+  if (file.kind === "script") return { lines: [], actions: [{ type: "dialog", cmd: file.open }] };
+  return { lines: [`sh: ${path}: Permission denied`] };
+}
+
+export function run(input: string, cols: number, history: string[], cwd = ""): ShellResult {
+  const [rawCmd = "", ...args] = input.trim().split(/\s+/);
+  const cmd = rawCmd.toLowerCase();
   const arg = args.join(" ");
 
   if (Object.prototype.hasOwnProperty.call(HIDDEN_COMMANDS, cmd)) {
-    return { lines: [HIDDEN_COMMANDS[cmd]] };
+    return { lines: wrap(HIDDEN_COMMANDS[cmd], cols) };
+  }
+
+  // running a script by path: ./cardipool.sh, projects/cardipool.sh, ~/...
+  if (rawCmd.includes("/")) {
+    return openFile(rawCmd, cwd, "exec", cols) ?? { lines: [`sh: ${rawCmd}: No such file or directory`] };
+  }
+  if (rawCmd.endsWith(".sh")) {
+    // like a real shell, the current directory isn't on the PATH
+    return { lines: wrap(`${rawCmd}: command not found. Did you mean './${rawCmd}'?`, cols) };
   }
 
   switch (cmd) {
@@ -395,15 +780,29 @@ export function run(input: string, cols: number, history: string[]): ShellResult
       return { lines: banner(cols) };
 
     case "ls":
-      return { lines: ["about/  projects/  experience/  contact/"] };
+      return { lines: ls(args, cwd, cols) };
 
-    case "cd":
-      return {
-        lines: wrap(
-          arg ? `cd: no need, just type '${arg.replace(/\/$/, "")}'` : "you're already home.",
-          cols,
-        ),
-      };
+    case "cd": {
+      const where = arg ? resolvePath(arg, cwd) : { dir: "" };
+      if (!where) return { lines: wrap(`cd: no such file or directory: ${arg}`, cols) };
+      if (where.file) return { lines: wrap(`cd: not a directory: ${arg}`, cols) };
+      return { lines: [], cwd: where.dir };
+    }
+
+    case "head":
+    case "tail":
+      return { lines: headTail(cmd, args, cwd, cols) };
+
+    case "pwd":
+      return { lines: [`/home/guest${cwd ? `/${cwd}` : ""}`] };
+
+    case "sh":
+    case "bash":
+    case "source":
+    case ".": {
+      if (!arg) return { lines: [`usage: ${cmd} <script>`] };
+      return openFile(args[0], cwd, "exec", cols) ?? { lines: [`${cmd}: ${args[0]}: No such file or directory`] };
+    }
 
     case "projects": {
       const lines = ["Recent work:", ""];
@@ -419,8 +818,14 @@ export function run(input: string, cols: number, history: string[]): ShellResult
       return { lines };
     }
 
-    case "project":
-    case "cat": {
+    case "cat":
+      if (arg) {
+        const file = openFile(args[0], cwd, "cat", cols);
+        if (file) return file;
+        if (!findProject(arg)) return { lines: wrap(`cat: ${arg}: No such file or directory`, cols) };
+      }
+    // falls through: `cat <project>` is a shortcut for `project <project>`
+    case "project": {
       if (!arg) return { lines: ["usage: project <name>   (see 'projects')"] };
       const p = findProject(arg);
       if (!p) return { lines: wrap(`project: '${arg}' not found. Try 'projects'.`, cols) };
@@ -528,6 +933,42 @@ export function run(input: string, cols: number, history: string[]): ShellResult
           ...wrap("https://github.com/samihsq/personal-website", cols),
         ],
       };
+
+    case "shutdown":
+    case "poweroff":
+    case "halt":
+      return {
+        lines: [
+          "",
+          "Broadcast message from samih@samih.dev:",
+          ...wrap(`The system is going down for poweroff in ${SHUTDOWN_SECONDS} seconds!`, cols),
+          ...wrap(touchMode ? "Tap the screen to cancel." : "Press any key to cancel.", cols),
+          "",
+        ],
+        actions: [{ type: "shutdown" }],
+      };
+
+    case "nano":
+    case "vi":
+    case "vim":
+    case "nvim": {
+      const editor = cmd === "nano" ? "nano" : "vim";
+      const path = args[0] ?? "";
+      const where = path ? resolvePath(path, cwd) : null;
+      const file = where?.file ? FS[where.dir][where.file] : null;
+      return {
+        lines: [],
+        actions: [
+          {
+            type: "editor",
+            editor,
+            name: path,
+            content: file ? fileText(file, cols) : null,
+            isDir: !!where && !where.file,
+          },
+        ],
+      };
+    }
 
     case "sudo":
       return { lines: wrap("nice try. this incident will be reported.", cols) };

@@ -6,18 +6,21 @@ import "@xterm/xterm/css/xterm.css";
 import { projects } from "../data/projects";
 import { experiences } from "../data/experience";
 import {
+  ALL_COMMANDS,
   COMPLETIONS,
-  HIDDEN_COMMANDS,
   LINKS,
-  PROMPT,
+  SHUTDOWN_COMMANDS,
+  SHUTDOWN_SECONDS,
   THEMES,
   argCompletions,
   banner,
   clickTarget,
+  columns,
+  pathCompletions,
+  promptFor,
   run,
   setTouchMode,
   type ClickTarget,
-  wrap,
 } from "./shell";
 import { BANNER_GRADIENT, BURN_IN_FADE_MS, PICTURE, local, session, storageGet, storageSet } from "./crtSettings";
 import {
@@ -45,13 +48,14 @@ import {
   type DialogState,
 } from "./dialog";
 import { setupPointer, type GridCell } from "./pointer";
+import { editorKey, editorScroll, layoutEditor, openEditor, type EditorState } from "./editor";
 import { isBlockLine } from "./blockText";
 import "./CrtTerminal.css";
 
 type QueueItem = string | { delay: number } | (() => void);
 
 /** Everything printed since the last clear, so output can be re-flowed on resize. */
-type TranscriptEntry = { type: "banner" } | { type: "cmd"; input: string };
+type TranscriptEntry = { type: "banner" } | { type: "cmd"; input: string; cwd: string };
 
 const QUICK_COMMANDS = ["help", "about", "projects", "experience", "contact"];
 
@@ -76,7 +80,27 @@ const CrtTerminalPage = () => {
   const runRef = useRef<(cmd: string) => void>(() => {});
   const [unsupported] = useState(() => !hasWebGL());
   const [failed, setFailed] = useState(false);
+  const [off, setOff] = useState(false);
   const navigate = useNavigate();
+
+  // After `shutdown`: any key or tap turns the tube back on (a fresh boot).
+  useEffect(() => {
+    if (!off) return;
+    const powerOn = () => {
+      storageSet(session, "crt-booted", "");
+      window.location.reload();
+    };
+    // ignore the key that may still be held from the countdown
+    const armed = window.setTimeout(() => {
+      window.addEventListener("keydown", powerOn);
+      window.addEventListener("pointerdown", powerOn);
+    }, 400);
+    return () => {
+      window.clearTimeout(armed);
+      window.removeEventListener("keydown", powerOn);
+      window.removeEventListener("pointerdown", powerOn);
+    };
+  }, [off]);
 
   useEffect(() => {
     if (unsupported || !screenRef.current) return;
@@ -241,7 +265,8 @@ const CrtTerminalPage = () => {
     };
 
     const cols = () => Math.max(xterm.cols - 1, 8);
-    const prompt = () => (xterm.cols >= 44 ? PROMPT : "$ ");
+    let cwd = ""; // working directory for the cd / ls / cat easter egg; "" is home
+    const prompt = () => promptFor(cwd, xterm.cols);
 
     let buffer = "";
     const history: string[] = [];
@@ -260,9 +285,22 @@ const CrtTerminalPage = () => {
       startPump();
     };
 
+    /** Longest command the prompt accepts (it wraps onto as many rows as it needs). */
+    const MAX_INPUT = 1000;
+
+    /**
+     * Rows above the cursor that the prompt + input currently cover. Text that
+     * exactly fills a row leaves the cursor on that row (xterm wraps only when
+     * the next character arrives), hence the -1.
+     */
+    const inputRowsAbove = (inputLength: number) =>
+      Math.floor(Math.max(prompt().length + inputLength - 1, 0) / Math.max(xterm.cols, 1));
+
+    /** Replace the input, redrawing it from the start of the prompt (it may span rows). */
     const setLine = (value: string) => {
-      buffer = value.slice(0, Math.max(cols() - prompt().length, 4));
-      xterm.write("\r\x1b[K" + prompt() + buffer);
+      const up = inputRowsAbove(buffer.length);
+      buffer = value.slice(0, MAX_INPUT);
+      xterm.write("\r" + (up ? `\x1b[${up}A` : "") + "\x1b[J" + prompt() + buffer);
     };
 
     // ---- hover highlight (single line) and hover box (whole item) ----
@@ -373,6 +411,48 @@ const CrtTerminalPage = () => {
           ) ?? null
         : null;
 
+    // ---- nano / vim easter egg (full screen, read-only files) ----
+    let editor: EditorState | null = null;
+
+    const renderEditor = () => {
+      if (!editor) return;
+      const { cols: c, rows: r } = text.getGridSize();
+      const bg = multiplyColours(glassColour(theme), theme);
+      painter.setScreen(layoutEditor(editor, c, r, { bg, fg: theme, dim: multiplyColours(theme, "#808080") }));
+    };
+
+    const openEditorScreen = (state: EditorState) => {
+      flush();
+      clearHover();
+      editor = state;
+      renderEditor();
+      focus();
+    };
+
+    const closeEditor = () => {
+      if (!editor) return;
+      editor = null;
+      painter.setScreen(null);
+      focus();
+    };
+
+    const editorInput = (data: string) => {
+      if (!editor) return;
+      if (editorKey(editor, data, text.getGridSize().rows) === "close") closeEditor();
+      else renderEditor();
+    };
+    // Editor shortcuts (^X, ^O, ^K...) are taken before xterm or the browser
+    // sees them, so they don't trigger browser actions or get lost. (^W, ^T
+    // and ^N belong to the browser and can't be caught.)
+    const onEditorCtrlKey = (e: KeyboardEvent) => {
+      if (!editor || !e.ctrlKey || e.altKey || e.metaKey || !/^[a-z[]$/i.test(e.key)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      // ^[ is Escape, as in a real terminal (handy for vim)
+      editorInput(e.key === "[" ? "\x1b" : String.fromCharCode(e.key.toUpperCase().charCodeAt(0) - 64));
+    };
+    window.addEventListener("keydown", onEditorCtrlKey, true);
+
     /** Clicking a project / experience item opens its dialog instead of printing. */
     const dialogFor = (cmd: string): DialogContent | null => {
       const project = cmd.match(/^project (\S+)$/);
@@ -390,7 +470,9 @@ const CrtTerminalPage = () => {
       histIndex = history.length;
       buffer = "";
 
-      const result = run(trimmed, cols(), history);
+      const ranIn = cwd;
+      const result = run(trimmed, cols(), history, cwd);
+      if (result.cwd !== undefined) cwd = result.cwd;
       for (const action of result.actions ?? []) {
         if (action.type === "clear") {
           transcript = [];
@@ -402,9 +484,133 @@ const CrtTerminalPage = () => {
         if (action.type === "theme") applyTheme(action.color);
         if (action.type === "classic") queue.push(() => navigate("/classic"));
       }
-      transcript.push({ type: "cmd", input: trimmed });
+      transcript.push({ type: "cmd", input: trimmed, cwd: ranIn });
       print(result.lines);
+      if (result.actions?.some((a) => a.type === "shutdown")) {
+        queue.push(beginCountdown);
+        startPump();
+        return;
+      }
       showPrompt();
+      // running a project / experience script opens its dialog
+      for (const action of result.actions ?? []) {
+        if (action.type === "dialog") openDialog(dialogFor(action.cmd));
+        if (action.type === "editor") {
+          openEditorScreen(openEditor(action.editor, action.name, action.content, action.isDir));
+        }
+      }
+    };
+
+    // ---- shutdown easter egg: countdown, then the tube switches off ----
+    let countdown: number | null = null;
+    let poweredOff = false;
+
+    const stopCountdown = () => {
+      if (countdown !== null) window.clearInterval(countdown);
+      countdown = null;
+    };
+
+    const beginCountdown = () => {
+      let left = SHUTDOWN_SECONDS;
+      xterm.write(String(left));
+      countdown = window.setInterval(() => {
+        left--;
+        if (left > 0) {
+          xterm.write(` .. ${left}`);
+          return;
+        }
+        stopCountdown();
+        xterm.write("\r\n\r\nbye.\r\n");
+        powerOff();
+      }, 1000);
+    };
+
+    const cancelShutdown = () => {
+      stopCountdown();
+      xterm.write("\r\nshutdown cancelled.\r\n");
+      showPrompt();
+    };
+
+    /**
+     * Classic CRT switch-off, drawn on the tube itself (so it gets the
+     * curvature, bloom and burn-in afterglow): a white flash, the picture
+     * squashed into a bright line, the line pulled into a dot, the dot fading.
+     */
+    // Real tubes snap shut fast, then the line and dot linger and fade slowly.
+    const FLASH = 40; // ms of full white
+    const COLLAPSE = 110; // picture -> line (very fast)
+    const SHRINK = 450; // line -> dot (fast, then slowing)
+    const FADE = 900; // dot afterglow
+    const POWER_OFF_MS = FLASH + COLLAPSE + SHRINK + FADE;
+    let offStart = 0;
+    let offFrame: number | null = null;
+    const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1);
+    // exponential ease-out: most of the movement in the first moments
+    const easeOut = (x: number) => (x >= 1 ? 1 : 1 - 2 ** (-10 * clamp01(x)));
+    const drawPowerOff: Overlay = (ctx) => {
+      // the renderer draws in CSS pixels (its context is scaled by devicePixelRatio)
+      const dpr = ctx.getTransform().a || 1;
+      const w = ctx.canvas.width / dpr;
+      const h = ctx.canvas.height / dpr;
+      const t = reduceMotion ? POWER_OFF_MS : performance.now() - offStart;
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, w, h);
+      const thin = Math.max(2, h * 0.004);
+      let rw = w;
+      let rh = h;
+      let alpha = 1;
+      const dot = thin * 2;
+      if (t < FLASH) {
+        // flash
+      } else if (t < FLASH + COLLAPSE) {
+        rh = h + (thin - h) * easeOut((t - FLASH) / COLLAPSE);
+      } else if (t < FLASH + COLLAPSE + SHRINK) {
+        rh = thin;
+        rw = w + (dot - w) * easeOut((t - FLASH - COLLAPSE) / SHRINK);
+      } else {
+        rh = rw = dot;
+        // slow afterglow: fades quickly at first, then lingers
+        alpha = (1 - clamp01((t - FLASH - COLLAPSE - SHRINK) / FADE)) ** 2;
+      }
+      if (alpha <= 0) return;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect((w - rw) / 2, (h - rh) / 2, rw, rh);
+    };
+
+    const powerOff = () => {
+      poweredOff = true;
+      clearHover();
+      closeDialog();
+      closeEditor();
+      page?.classList.add("crt-powering-off");
+      offStart = performance.now();
+      painter.setFinal(drawPowerOff);
+      const step = () => {
+        if (disposed) return;
+        painter.refresh();
+        if (!reduceMotion && performance.now() - offStart < POWER_OFF_MS) {
+          offFrame = requestAnimationFrame(step);
+          return;
+        }
+        offFrame = null;
+        // Browsers only let a page close a tab it opened itself, or one with
+        // no history; otherwise this does nothing and the off screen shows.
+        window.setTimeout(() => {
+          if (disposed) return;
+          window.close();
+          setOff(true);
+        }, 250);
+      };
+      offFrame = requestAnimationFrame(step);
+    };
+
+    /** Ctrl+D on an empty line logs out, like a real shell. */
+    const logout = () => {
+      xterm.write("logout\r\n");
+      print(run(SHUTDOWN_COMMANDS[0], cols(), history).lines);
+      queue.push(beginCountdown);
+      startPump();
     };
 
     /**
@@ -422,8 +628,8 @@ const CrtTerminalPage = () => {
           out += banner(cols()).join("\r\n") + "\r\n";
         } else {
           replayed.push(entry.input);
-          const lines = run(entry.input, cols(), replayed).lines;
-          out += prompt() + entry.input + "\r\n";
+          const lines = run(entry.input, cols(), replayed, entry.cwd).lines;
+          out += promptFor(entry.cwd, xterm.cols) + entry.input + "\r\n";
           if (lines.length) out += lines.join("\r\n") + "\r\n";
           out += "\r\n";
         }
@@ -435,15 +641,22 @@ const CrtTerminalPage = () => {
       const parts = buffer.split(" ");
       if (parts.length === 1) {
         const typed = parts[0].toLowerCase();
+        if (typed.includes("/")) {
+          // ./script.sh or a path to one
+          const matches = pathCompletions(parts[0], cwd, true).filter((c) => c.startsWith(parts[0]));
+          if (matches.length === 1) setLine(matches[0] + (matches[0].endsWith("/") ? "" : " "));
+          else if (matches.length > 1) listMatches(matches);
+          return;
+        }
         // hidden commands only complete once you've started typing one
-        const pool = typed ? [...COMPLETIONS, ...Object.keys(HIDDEN_COMMANDS)] : COMPLETIONS;
+        const pool = typed ? ALL_COMMANDS.filter((c) => c !== ".") : COMPLETIONS;
         const matches = pool.filter((c) => c.startsWith(typed));
         if (matches.length === 1) setLine(matches[0] + " ");
         else if (matches.length > 1) listMatches(matches);
       } else {
         const cmd = parts[0].toLowerCase();
-        const partial = parts.slice(1).join(" ").toLowerCase();
-        const matches = argCompletions(cmd).filter((c) => c.startsWith(partial));
+        const partial = parts.slice(1).join(" ").toLowerCase(); // every name is lower case
+        const matches = argCompletions(cmd, cwd, partial).filter((c) => c.startsWith(partial));
         if (matches.length === 1) setLine(`${parts[0]} ${matches[0]}`);
         else if (matches.length > 1) listMatches(matches);
       }
@@ -459,24 +672,59 @@ const CrtTerminalPage = () => {
         setLine(parts.length === 1 ? common : `${parts[0]} ${common}`);
         return;
       }
-      // word-wrapped, so names don't break across lines
-      const list = wrap(matches.join("  "), cols()).join("\r\n");
-      xterm.write("\r\n" + list + "\r\n" + prompt() + buffer);
+      // like bash: nothing more to fill in, so the first TAB does nothing and
+      // the second lists the options in columns (filled top to bottom, like ls)
+      if (lastTabBuffer !== buffer) {
+        lastTabBuffer = buffer;
+        return;
+      }
+      lastTabBuffer = null;
+      // paths are listed by name only, like bash ("cardipool.sh", not "projects/cardipool.sh")
+      const names = matches.map((m) => m.replace(/^.*\/(?=.)/, "")).sort((a, b) => a.localeCompare(b));
+      xterm.write("\r\n" + columns(names, cols()).join("\r\n") + "\r\n" + prompt() + buffer);
     };
 
+    /** The input when TAB last found several options; a second TAB lists them. */
+    let lastTabBuffer: string | null = null;
+
+    // bash-style TAB on an empty line: the first does nothing, the second
+    // offers to list every command (hidden ones too)
+    let emptyTabs = 0;
+    let askingToList = false;
+
     const onData = (data: string) => {
+      if (poweredOff) return;
+      if (countdown !== null) return cancelShutdown();
+      if (editor) return editorInput(data);
       if (dialog) return dialogKey(data);
       if (busy) {
         // any key skips the typing animation
         flush();
         return;
       }
+      if (askingToList) {
+        if (/^[yY ]$/.test(data)) {
+          askingToList = false;
+          xterm.write("\r\n" + columns(ALL_COMMANDS, cols()).join("\r\n") + "\r\n" + prompt() + buffer);
+        } else if (/^[nN]$/.test(data) || data === "\x7f" || data === "\x03") {
+          askingToList = false;
+          xterm.write("\r\n" + prompt() + buffer);
+        }
+        return; // like bash, only y or n answers the question
+      }
+      if (data !== "\t") lastTabBuffer = null;
+      if (data === "\t" && !buffer) {
+        if (++emptyTabs >= 2) {
+          emptyTabs = 0;
+          askingToList = true;
+          xterm.write(`\r\nDisplay all ${ALL_COMMANDS.length} possibilities? (y or n)`);
+        }
+        return;
+      }
+      emptyTabs = 0;
       if (data === "\r") return execute(buffer);
       if (data === "\x7f" || data === "\b") {
-        if (buffer) {
-          buffer = buffer.slice(0, -1);
-          xterm.write("\b \b");
-        }
+        if (buffer) setLine(buffer.slice(0, -1)); // redraws, so it works across wrapped rows
         return;
       }
       if (data === "\t") return complete();
@@ -497,6 +745,10 @@ const CrtTerminalPage = () => {
         buffer = "";
         return;
       }
+      if (data === "\x04") {
+        if (!buffer) logout();
+        return;
+      }
       if (data === "\x0c") {
         transcript = [];
         xterm.write("\x1bc"); // full reset, queued after pending writes
@@ -508,8 +760,8 @@ const CrtTerminalPage = () => {
       for (const ch of data) {
         if (ch === "\r" || ch === "\n") return execute(buffer);
         if (ch < " ") continue;
-        if (prompt().length + buffer.length >= cols()) continue;
-        buffer += ch;
+        if (buffer.length >= MAX_INPUT) continue;
+        buffer += ch; // xterm wraps onto the next row by itself
         xterm.write(ch);
       }
     };
@@ -517,6 +769,9 @@ const CrtTerminalPage = () => {
     const dataSub = xterm.onData(onData);
 
     runRef.current = (cmd: string) => {
+      if (poweredOff) return;
+      if (countdown !== null) return cancelShutdown();
+      closeEditor(); // the shortcut bar leaves the editor
       closeDialog();
       if (busy) flush();
       setLine(cmd);
@@ -541,6 +796,7 @@ const CrtTerminalPage = () => {
       touchOnly,
       handlers: {
         hover: (cell) => {
+          if (editor) return false;
           if (dialog) {
             const button = buttonAt(cell);
             const index = button ? button.index : null;
@@ -557,6 +813,9 @@ const CrtTerminalPage = () => {
         },
 
         click: (cell, touch) => {
+          if (poweredOff) return;
+          if (countdown !== null) return cancelShutdown();
+          if (editor) return focus();
           if (dialog) {
             const button = buttonAt(cell);
             if (button) {
@@ -593,6 +852,11 @@ const CrtTerminalPage = () => {
         },
 
         scroll: (lines, source) => {
+          if (editor) {
+            editorScroll(editor, lines, text.getGridSize().rows);
+            renderEditor();
+            return true;
+          }
           if (dialog) {
             dialog.state.scroll += lines;
             renderDialog();
@@ -606,7 +870,7 @@ const CrtTerminalPage = () => {
           return false; // the renderer scrolls the terminal on wheel
         },
 
-        allowSelection: () => !dialog,
+        allowSelection: () => !dialog && !editor,
       },
     });
 
@@ -615,6 +879,7 @@ const CrtTerminalPage = () => {
     let reflowTimer: number | null = null;
     const resizeSub = xterm.onResize(({ cols: newCols }) => {
       if (dialog) renderDialog();
+      renderEditor();
       if (newCols === lastCols) return;
       lastCols = newCols;
       if (reflowTimer !== null) window.clearTimeout(reflowTimer);
@@ -637,6 +902,7 @@ const CrtTerminalPage = () => {
     const onWindowResize = () => {
       fitTextScale(crt, container);
       if (dialog) renderDialog();
+      renderEditor();
     };
     window.addEventListener("resize", onWindowResize);
 
@@ -669,8 +935,12 @@ const CrtTerminalPage = () => {
     return () => {
       disposed = true;
       stopPump();
+      stopCountdown();
+      if (offFrame !== null) cancelAnimationFrame(offFrame);
+      page?.classList.remove("crt-powering-off");
       if (reflowTimer !== null) window.clearTimeout(reflowTimer);
       window.removeEventListener("resize", onWindowResize);
+      window.removeEventListener("keydown", onEditorCtrlKey, true);
       resizeSub.dispose();
       stopTrail();
       stopPointer();
@@ -701,6 +971,12 @@ const CrtTerminalPage = () => {
         ))}
         <a href="#/classic">plain site</a>
       </nav>
+
+      {off && (
+        <div className="crt-off" role="status">
+          <p className="crt-off-hint">press any key or reload</p>
+        </div>
+      )}
 
       {/* Same content as plain HTML for screen readers and search engines. */}
       <main className="visually-hidden">
