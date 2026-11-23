@@ -194,6 +194,8 @@ export function banner(cols: number): string[] {
       cols,
     ),
     "",
+    ...wrap("Try 'projects', 'experience' or 'contact'.", cols),
+    "",
   ];
 }
 
