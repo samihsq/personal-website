@@ -305,6 +305,65 @@ const CrtTerminalPage = () => {
       xterm.write("\r" + (up ? `\x1b[${up}A` : "") + "\x1b[J" + prompt() + buffer);
     };
 
+    // ---- click cues: a faint underline under everything clickable ----
+    type Cue = { row: number; start: number; end: number }; // viewport row, columns [start, end)
+    let cues: Cue[] = [];
+    let cuesKey = "";
+    let cuesAt = 0;
+
+    /** Find the clickable spans on screen (only when the visible text changed, and not too often). */
+    const updateCues = () => {
+      const buf = xterm.buffer.active;
+      const vy = buf.viewportY;
+      const rows = xterm.rows;
+      const lines: string[] = [];
+      for (let r = 0; r < rows; r++) lines.push(buf.getLine(vy + r)?.translateToString(true) ?? "");
+      const key = `${vy}|${xterm.cols}|${lines.join("\n")}`;
+      if (key === cuesKey) return;
+      const now = performance.now();
+      if (busy && now - cuesAt < 150) return; // while text types out, refresh a few times a second
+      cuesKey = key;
+      cuesAt = now;
+      const getLine = (r: number) => buf.getLine(r)?.translateToString(true);
+      const found: Cue[] = [];
+      lines.forEach((line, r) => {
+        const end = line.replace(/\s+$/, "").length;
+        for (let c = 0; c < end; c++) {
+          if (line[c] === " ") continue;
+          const t = clickTarget(getLine, vy + r, c, cols());
+          if (!t) continue;
+          // stop at a column gap: help rows underline the command, not its description,
+          // and experience rows the role, not the date column
+          const gap = line.indexOf("  ", t.start + 1);
+          if (t.block) {
+            // whole list items: underline just the item's first line
+            if (t.block.top === vy + r) found.push({ row: r, start: t.start, end: gap > t.start ? Math.min(gap, end) : end });
+            break;
+          }
+          const last = found[found.length - 1];
+          if (last && last.row === r && last.start === t.start) {
+            c = Math.max(c, t.end - 1); // same target as the span already underlined
+            continue;
+          }
+          const stop = Math.min(t.end, end, gap > t.start ? gap : Infinity);
+          found.push({ row: r, start: t.start, end: stop });
+          c = Math.max(c, stop - 1);
+        }
+      });
+      cues = found;
+    };
+
+    const drawCues: Overlay = (ctx, m) => {
+      updateCues();
+      if (!cues.length) return;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.28)"; // tinted to the phosphor colour afterwards
+      const h = Math.max(1, Math.round(m.scale * 0.6));
+      for (const c of cues) {
+        ctx.fillRect(m.margin + c.start * m.cellW, m.margin + (c.row + 1) * m.cellH - h - 1, (c.end - c.start) * m.cellW, h);
+      }
+    };
+    painter.setOverlay("cues", drawCues);
+
     // ---- hover highlight (single line) and hover box (whole item) ----
     let hoverBox: { block: { top: number; bottom: number }; start: number; end: number } | null = null;
     /** Whole-item highlight: a filled block with the item's text drawn inverted. */

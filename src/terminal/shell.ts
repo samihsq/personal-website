@@ -863,8 +863,9 @@ export function run(input: string, cols: number, history: string[], cwd = ""): S
       visibleProjects.forEach((p, i) => {
         // on narrow screens drop the leading space so long names still fit on one line
         const n = `${String(i + 1).padStart(cols >= 40 ? 2 : 1)}. `;
+        if (i) lines.push(""); // a blank line between projects
         lines.push(...wrap(`${p.slug}  [${p.category}]`, cols, "    ", n));
-        lines.push(...wrap(p.summary, cols, "    "));
+        lines.push(...wrap(p.summary, cols, "    ", "    "));
       });
       const soon = projects.filter((p) => p.comingSoon);
       if (soon.length) {
@@ -908,10 +909,23 @@ export function run(input: string, cols: number, history: string[], cwd = ""): S
     case "work": {
       lastList = "experience";
       const lines = ["Experience:", ""];
+      // Dates sit in one column: on the role's line when there's room
+      // (" 1. Role ......  June 2026 - September 2026", org underneath),
+      // otherwise on their own indented line under the org.
+      const roleW = Math.max(...experiences.map((e) => e.role.length));
+      const dateW = Math.max(...experiences.map((e) => e.period.length));
+      const sideBySide = 4 + roleW + 3 + dateW <= cols;
       experiences.forEach((e, i) => {
+        if (i) lines.push("");
         const n = `${String(i + 1).padStart(2)}. `;
-        lines.push(...wrap(`${e.role} @ ${e.org}`, cols, "    ", n));
-        lines.push(...wrap(e.period, cols, "    "));
+        if (sideBySide) {
+          lines.push(`${n}${e.role.padEnd(roleW)}   ${e.period}`);
+          lines.push(...wrap(e.org, cols, "    ", "    "));
+        } else {
+          lines.push(...wrap(e.role, cols, "    ", n));
+          lines.push(...wrap(e.org, cols, "    ", "    "));
+          lines.push(...wrap(e.period, cols, "    ", "    "));
+        }
       });
       lines.push(
         "",
