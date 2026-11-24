@@ -39,10 +39,10 @@ const Home = () => {
         </Link>
       </section>
       <section className="projects-section">
-        <h3>Recent work:</h3>
-        <ProjectGrid />
-        <h3 style={{ marginTop: "2rem" }}>Experience:</h3>
+        <h3>Experience:</h3>
         <ExperienceGrid />
+        <h3 style={{ marginTop: "2rem" }}>Recent work:</h3>
+        <ProjectGrid />
       </section>
     </main>
   );

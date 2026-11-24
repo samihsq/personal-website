@@ -58,7 +58,7 @@ type QueueItem = string | { delay: number } | (() => void);
 /** Everything printed since the last clear, so output can be re-flowed on resize. */
 type TranscriptEntry = { type: "banner" } | { type: "cmd"; input: string; cwd: string };
 
-const QUICK_COMMANDS = ["help", "about", "projects", "experience", "contact"];
+const QUICK_COMMANDS = ["help", "about", "experience", "projects", "contact"];
 
 function hasWebGL() {
   try {
@@ -1035,6 +1035,14 @@ const CrtTerminalPage = () => {
         <p>
           <a href="#/classic">View the plain version of this site</a>
         </p>
+        <h2>Experience</h2>
+        <ul>
+          {experiences.map((e) => (
+            <li key={`${e.org}-${e.period}`}>
+              {e.role}, {e.org} ({e.period})
+            </li>
+          ))}
+        </ul>
         <h2>Recent work</h2>
         <ul>
           {projects
@@ -1044,14 +1052,6 @@ const CrtTerminalPage = () => {
                 <a href={p.demo ?? p.link ?? `#/project/${p.slug}`}>{p.title}</a>: {p.summary}
               </li>
             ))}
-        </ul>
-        <h2>Experience</h2>
-        <ul>
-          {experiences.map((e) => (
-            <li key={`${e.org}-${e.period}`}>
-              {e.role}, {e.org} ({e.period})
-            </li>
-          ))}
         </ul>
         <h2>Contact</h2>
         <ul>

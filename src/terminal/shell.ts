@@ -50,7 +50,7 @@ function buildFs(): Record<string, Record<string, FsFile>> {
 }
 
 const FS = buildFs();
-const DIRECTORIES = Object.keys(FS);
+const DIRECTORIES = Object.keys(FS).sort(); // ls order: about, contact, experience, projects
 
 /** A path resolved against the current directory ("" is home). */
 type FsPath = { dir: string; file?: string };
@@ -190,21 +190,21 @@ export function banner(cols: number): string[] {
     ...wrap(
       touchMode
         ? "Tap 'help' or the buttons below. Names on screen are tappable too."
-        : "Type 'help', or click any name or command on screen.",
+        : "Type 'help', click any name or command on screen, or use bash commands.",
       cols,
     ),
     "",
-    ...wrap("Try 'projects', 'experience' or 'contact'.", cols),
+    ...wrap("Try 'experience', 'projects' or 'contact'.", cols),
     "",
   ];
 }
 
 export const COMMANDS: { name: string; usage: string; desc: string }[] = [
   { name: "about", usage: "about", desc: "who I am" },
-  { name: "projects", usage: "projects", desc: "list my recent work" },
-  { name: "project", usage: "project <name>", desc: "details on one project" },
   { name: "experience", usage: "experience", desc: "list where I've worked" },
   { name: "exp", usage: "exp <number>", desc: "details on one role" },
+  { name: "projects", usage: "projects", desc: "list my recent work" },
+  { name: "project", usage: "project <name>", desc: "details on one project" },
   { name: "contact", usage: "contact", desc: "where to find me" },
   { name: "open", usage: "open <name>", desc: "open a project, github or linkedin" },
   { name: "theme", usage: "theme <color>", desc: "green, amber, white or blue" },
@@ -265,6 +265,7 @@ export function argCompletions(cmd: string, cwd = "", partial = ""): string[] {
       // files first; at home `cat <project>` still works as a shortcut
       return [...pathCompletions(partial, cwd), ...(cwd || partial.includes("/") ? [] : visibleProjects.map((p) => p.slug))];
     case "ls":
+    case "rm":
     case "head":
     case "tail":
     case "nano":
@@ -294,6 +295,8 @@ export function argCompletions(cmd: string, cwd = "", partial = ""): string[] {
 
 function findProject(query: string) {
   const q = query.toLowerCase();
+  // by its number in the `projects` list
+  if (/^\d+$/.test(q)) return visibleProjects[parseInt(q, 10) - 1];
   return (
     visibleProjects.find((p) => p.slug === q) ??
     visibleProjects.find((p) => p.title.toLowerCase() === q) ??
@@ -315,6 +318,9 @@ function hr(cols: number) {
 // Click / tap targets: work out what a click on a given character should do,
 // from the text on that line (and the lines just above it).
 // ---------------------------------------------------------------------------
+
+/** The list a bare number picks from: whichever of `projects` / `experience` ran last. */
+let lastList: "projects" | "experience" | null = null;
 
 /** On phones/tablets the shell is tap-only, so wording changes slightly. */
 let touchMode = false;
@@ -444,13 +450,13 @@ export function clickTarget(
 
   /** Command for a list item or help row, e.g. "* cardipool  [Web]", " 3. Role @ Org", "  about". */
   const itemAt = (text: string): string | null => {
-    const exp = text.match(/^\s*(\d+)\.\s/);
-    if (exp) {
-      const n = parseInt(exp[1], 10);
+    // numbered list items: " 1. cardipool  [Web]" (projects) or " 1. Role @ Org" (experience)
+    const numbered = text.match(/^\s*(\d+)\.\s+(\S+)/);
+    if (numbered) {
+      const n = parseInt(numbered[1], 10);
+      if (visibleProjects[n - 1]?.slug === numbered[2]) return `project ${numbered[2]}`;
       return n >= 1 && n <= experiences.length ? `exp ${n}` : null;
     }
-    const proj = text.match(/^\* (\S+)/);
-    if (proj && visibleProjects.some((p) => p.slug === proj[1])) return `project ${proj[1]}`;
     // help rows are "  <usage>" then 2+ spaces or end of line, so wrapped
     // prose that merely starts with a command word isn't mistaken for one
     const help = COMMANDS.find((c) => {
@@ -762,6 +768,13 @@ export function run(input: string, cols: number, history: string[], cwd = ""): S
   const cmd = rawCmd.toLowerCase();
   const arg = args.join(" ");
 
+  // a bare number picks from the list shown last (`projects` or `experience`)
+  if (/^\d+$/.test(cmd) && !args.length) {
+    if (lastList === "experience") return run(`exp ${cmd}`, cols, history, cwd);
+    if (lastList === "projects") return run(`project ${cmd}`, cols, history, cwd);
+    return { lines: wrap(`${cmd}: command not found. Run 'experience' or 'projects' first, then type a number.`, cols) };
+  }
+
   if (Object.prototype.hasOwnProperty.call(HIDDEN_COMMANDS, cmd)) {
     return { lines: wrap(HIDDEN_COMMANDS[cmd], cols) };
   }
@@ -809,7 +822,7 @@ export function run(input: string, cols: number, history: string[], cwd = ""): S
           ...wrap("Hi, I'm Samih.", cols),
           ...wrap("I'm a senior at Stanford, studying Computer Science.", cols),
           "",
-          ...wrap("Try 'projects', 'experience' or 'contact'.", cols),
+          ...wrap("Try 'experience', 'projects' or 'contact'.", cols),
         ],
       };
 
@@ -845,16 +858,27 @@ export function run(input: string, cols: number, history: string[], cwd = ""): S
     }
 
     case "projects": {
+      lastList = "projects";
       const lines = ["Recent work:", ""];
-      for (const p of visibleProjects) {
-        lines.push(...wrap(`${p.slug}  [${p.category}]`, cols, "    ", "* "));
+      visibleProjects.forEach((p, i) => {
+        // on narrow screens drop the leading space so long names still fit on one line
+        const n = `${String(i + 1).padStart(cols >= 40 ? 2 : 1)}. `;
+        lines.push(...wrap(`${p.slug}  [${p.category}]`, cols, "    ", n));
         lines.push(...wrap(p.summary, cols, "    "));
-      }
+      });
       const soon = projects.filter((p) => p.comingSoon);
       if (soon.length) {
         lines.push("", ...wrap(`Coming soon: ${soon.map((p) => p.title).join(", ")}`, cols));
       }
-      lines.push("", ...wrap("Type 'project <name>' for details, or 'open <name>'.", cols));
+      lines.push(
+        "",
+        ...wrap(
+          touchMode
+            ? "Tap a project for details."
+            : "Hover and click a project, or type its number. 'open <name>' visits it.",
+          cols,
+        ),
+      );
       return { lines };
     }
 
@@ -882,13 +906,17 @@ export function run(input: string, cols: number, history: string[], cwd = ""): S
 
     case "experience":
     case "work": {
+      lastList = "experience";
       const lines = ["Experience:", ""];
       experiences.forEach((e, i) => {
         const n = `${String(i + 1).padStart(2)}. `;
         lines.push(...wrap(`${e.role} @ ${e.org}`, cols, "    ", n));
         lines.push(...wrap(e.period, cols, "    "));
       });
-      lines.push("", ...wrap("Type 'exp <number>' for details.", cols));
+      lines.push(
+        "",
+        ...wrap(touchMode ? "Tap a role for details." : "Hover over a role and click it, or type its number, for details.", cols),
+      );
       return { lines };
     }
 
